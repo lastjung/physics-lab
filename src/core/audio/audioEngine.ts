@@ -34,6 +34,20 @@ const PIANO_SHORTS: string[] = [
   '/audio/piano-shorts/Piano_Short_20_Grand_Power_Full_HQ.mp3',
 ];
 
+const PIANO_LYRIA: string[] = [
+  '/audio/piano-lyria/001_Lyria_Piano_Ethereal_70s.wav',
+  '/audio/piano-lyria/002_Logic_Pulse_Analytical.wav',
+  '/audio/piano-lyria/003_Gravity_Wave_Ethereal.wav',
+  '/audio/piano-lyria/004_Kinetic_Flow_Energetic.wav',
+  '/audio/piano-lyria/005_Singularity_Dark.wav',
+  '/audio/piano-lyria/006_Nano_World_Curious.wav',
+  '/audio/piano-lyria/007_Vacuum_Void_Minimal.wav',
+  '/audio/piano-lyria/008_Clockwork_Mechanical.wav',
+  '/audio/piano-lyria/009_Entropy_Slow.wav',
+  '/audio/piano-lyria/010_Chain_Reaction_Tense.wav',
+  '/audio/piano-lyria/011_Celestial_Dawn_Bright.wav',
+];
+
 const clamp = (v: number, min = 0, max = 1): number => Math.min(max, Math.max(min, v));
 
 export const defaultAudioSettings: AudioSettings = {
@@ -88,7 +102,9 @@ export class AudioEngine {
 
   constructor(initialSettings = loadAudioSettings()) {
     this.settings = initialSettings;
-    const randomTrack = PIANO_SHORTS[Math.floor(Math.random() * PIANO_SHORTS.length)];
+    // Mix piano-shorts and the new piano-lyria for more variety
+    const combinedTracks = [...PIANO_SHORTS, ...PIANO_LYRIA];
+    const randomTrack = combinedTracks[Math.floor(Math.random() * combinedTracks.length)];
     this.bgm = new Audio(randomTrack);
     this.bgm.loop = true;
     this.bgm.preload = 'auto';
