@@ -9,6 +9,8 @@ export interface SimulationPreset {
     | 'coupled-spring'
     | 'orbit'
     | 'collision-lab'
+    | 'billiards'
+    | 'car-suspension'
     | 'newtons-cradle'
     | 'cart-pendulum'
     | 'roller-coaster'
@@ -189,6 +191,39 @@ export const simulationPresets: SimulationPreset[] = [
       ballRestitution: 0.94,
       initialX1: -1.25,
       initialX2: 0.55,
+    },
+  },
+  {
+    id: 'billiards',
+    name: 'Billiards',
+    pluginId: 'billiards',
+    category: 'Mechanics',
+    summary: 'Multi-ball table collisions with cue-like break start.',
+    help:
+      '당구대에서 다물체 충돌을 관찰하는 데모입니다.\nBall/Wall restitution과 damping, cue speed를 조절해 충돌 전달과 감쇠를 비교합니다.\n공을 드래그해 초기 배치를 바꿀 수 있습니다.',
+    params: {
+      restitution: 0.96,
+      wallRestitution: 0.93,
+      linearDamping: 0.01,
+      cueSpeed: 3.2,
+    },
+  },
+  {
+    id: 'car-suspension',
+    name: 'Car Suspension',
+    pluginId: 'car-suspension',
+    category: 'Mechanics',
+    summary: 'Quarter-car suspension with spring-damper and road input.',
+    help:
+      '차체-휠 2질량 서스펜션 모델입니다.\n스프링/댐퍼/타이어 강성과 노면 진동 입력을 조절해 차체 응답과 진동 전달을 비교합니다.',
+    params: {
+      springK: 22,
+      damperC: 1.2,
+      tireK: 34,
+      roadAmplitude: 0.08,
+      roadFrequency: 1.4,
+      gripOffsetX: 0,
+      gripOffsetY: -22,
     },
   },
 ];

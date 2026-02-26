@@ -54,9 +54,14 @@ body {
 
 .topbar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
+}
+
+.tabbar {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .brand-stack {
@@ -77,17 +82,16 @@ body {
 }
 
 .game-library {
-  display: grid;
-  gap: 7px;
-  overflow-x: auto;
-  padding-bottom: 3px;
-  scrollbar-width: thin;
+  display: block;
+  overflow: visible;
+  padding-bottom: 0;
 }
 
 .game-library-row {
   display: flex;
   gap: 8px;
-  width: max-content;
+  flex-wrap: wrap;
+  width: 100%;
   align-items: center;
 }
 
@@ -451,7 +455,7 @@ button.secondary {
   }
 
   .game-library {
-    grid-column: 1 / -1;
+    width: 100%;
   }
 
   .mobile-menu-btn {

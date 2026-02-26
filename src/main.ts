@@ -2,6 +2,8 @@ import './styles.css';
 
 import { AudioEngine } from './core/audio/audioEngine';
 import { readUrlState, replaceUrlState } from './core/urlState';
+import { billiardsPlugin } from './plugins/BilliardsPlugin';
+import { carSuspensionPlugin } from './plugins/CarSuspensionPlugin';
 import { cartPendulumPlugin } from './plugins/CartPendulumPlugin';
 import { collisionLabPlugin } from './plugins/CollisionLabPlugin';
 import { coupledSpringPlugin } from './plugins/CoupledSpringPlugin';
@@ -62,6 +64,8 @@ const choosePreset = (presetId: string): void => {
 };
 
 const plugins: Record<string, SimulationPlugin> = {
+  [billiardsPlugin.id]: billiardsPlugin,
+  [carSuspensionPlugin.id]: carSuspensionPlugin,
   [cartPendulumPlugin.id]: cartPendulumPlugin,
   [collisionLabPlugin.id]: collisionLabPlugin,
   [coupledSpringPlugin.id]: coupledSpringPlugin,
@@ -121,30 +125,27 @@ brandStack.append(title, titleNote);
 
 const quickLibrary = document.createElement('div');
 quickLibrary.className = 'game-library';
-const quickLibraryTop = document.createElement('div');
-quickLibraryTop.className = 'game-library-row';
-const quickLibraryBottom = document.createElement('div');
-quickLibraryBottom.className = 'game-library-row';
-const quickSplit = Math.ceil(simulationPresets.length / 2);
-simulationPresets.forEach((preset, i) => {
+const quickLibraryRow = document.createElement('div');
+quickLibraryRow.className = 'game-library-row';
+simulationPresets.forEach((preset) => {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = preset.id === activePreset.id ? 'game-btn active' : 'game-btn secondary';
   button.textContent = preset.name;
   button.addEventListener('click', () => choosePreset(preset.id));
-  if (i < quickSplit) {
-    quickLibraryTop.append(button);
-  } else {
-    quickLibraryBottom.append(button);
-  }
+  quickLibraryRow.append(button);
 });
-quickLibrary.append(quickLibraryTop, quickLibraryBottom);
+quickLibrary.append(quickLibraryRow);
 
 const mobileMenuButton = document.createElement('button');
 mobileMenuButton.className = 'secondary mobile-menu-btn';
 mobileMenuButton.textContent = 'Menu';
 
-topbar.append(brandStack, quickLibrary, mobileMenuButton);
+topbar.append(brandStack, mobileMenuButton);
+
+const tabbar = document.createElement('section');
+tabbar.className = 'panel tabbar';
+tabbar.append(quickLibrary);
 
 const layout = document.createElement('div');
 layout.className = 'layout';
@@ -158,7 +159,7 @@ const librarySection = document.createElement('section');
 librarySection.className = 'library-section';
 const libraryTitle = document.createElement('h3');
 libraryTitle.className = 'section-title';
-libraryTitle.textContent = 'Game Library';
+libraryTitle.textContent = 'Now Playing';
 
 const recentRow = document.createElement('div');
 recentRow.className = 'recent-row';
@@ -180,8 +181,15 @@ for (const id of loadRecent()) {
 const cardGrid = document.createElement('div');
 cardGrid.className = 'game-card-grid';
 const favoriteId = loadFavorite();
+const focusedPresetIds = [activePreset.id];
+for (const id of [...loadRecent(), ...(favoriteId ? [favoriteId] : [])]) {
+  if (focusedPresetIds.includes(id)) continue;
+  focusedPresetIds.push(id);
+  if (focusedPresetIds.length >= 3) break;
+}
+const focusedPresets = focusedPresetIds.map((id) => getPresetById(id));
 
-for (const preset of simulationPresets) {
+for (const preset of focusedPresets) {
   const card = document.createElement('article');
   card.className = preset.id === activePreset.id ? 'game-card active' : 'game-card';
 
@@ -271,14 +279,14 @@ const gameMenu = createMenuSection('Game Controls', true);
 
 menuPanel.append(commonMenu.section, audioMenu.section, gameHelpMenu.section, gameMenu.section);
 layout.append(stagePanel, menuPanel);
-shell.append(topbar, layout);
+shell.append(topbar, tabbar, layout);
 app.append(shell);
 
 const audio = new AudioEngine();
 let soundEnabled = false;
 let playOnlySound = true;
 const resolveSfxProfile = (): 'default' | 'pendulum' | 'collision' | 'cradle' | 'coaster' => {
-  if (activePreset.id === 'collision-lab') return 'collision';
+  if (activePreset.id === 'collision-lab' || activePreset.id === 'billiards') return 'collision';
   if (activePreset.id === 'newtons-cradle') return 'cradle';
   if (activePreset.id === 'roller-coaster') return 'coaster';
   if (activePreset.id === 'roller-coaster-two-balls') return 'coaster';

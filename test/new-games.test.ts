@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { Billiards } from '../src/simulations/billiards';
+import { CarSuspension } from '../src/simulations/carSuspension';
 import { CartPendulum } from '../src/simulations/cartPendulum';
 import { NewtonsCradle } from '../src/simulations/newtonsCradle';
 import { RollerCoaster } from '../src/simulations/rollerCoaster';
@@ -31,6 +33,25 @@ describe('New simulations sanity', () => {
     expect(hit).toBeGreaterThan(0);
     expect(k.x).toBeLessThanOrEqual(2.4);
     expect(k.y).toBeCloseTo(sim.trackY(k.x), 6);
+  });
+
+  it('Billiards resolves a head-on collision', () => {
+    const sim = new Billiards({ restitution: 0.98, linearDamping: 0 });
+    const r = sim.getParams().radius;
+    sim.setBallState(0, -0.2, 0, 1.4, 0);
+    sim.setBallState(1, -0.2 + r * 1.7, 0, 0, 0);
+    const impact = sim.resolveCollisions(-2.2, 2.2, -1.05, 1.05);
+    const k = sim.getKinematics();
+
+    expect(impact).toBeGreaterThan(0);
+    expect(Math.abs(k.balls[1].vx)).toBeGreaterThan(0.1);
+  });
+
+  it('Car Suspension derivatives remain finite for road forcing', () => {
+    const sim = new CarSuspension({ roadAmplitude: 0.09, roadFrequency: 1.6 });
+    const d = sim.derivatives([0.02, -0.01, 0.3, -0.2], 0.4);
+
+    expect(d.every((v) => Number.isFinite(v))).toBe(true);
   });
 
   it('Roller Coaster wrap mode teleports across boundary without bounce', () => {
