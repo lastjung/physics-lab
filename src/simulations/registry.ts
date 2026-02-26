@@ -166,6 +166,7 @@ export const simulationPresets: SimulationPreset[] = [
       trackAmplitude: 0.55,
       trackFrequency: 1.35,
       trackTilt: 0.05,
+      boundaryMode: 0,
       damping: 0.04,
       initialX: -1.35,
     },

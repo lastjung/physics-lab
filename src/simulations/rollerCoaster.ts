@@ -6,6 +6,7 @@ export interface RollerCoasterParams {
   trackAmplitude: number;
   trackFrequency: number;
   trackTilt: number;
+  boundaryMode: number;
   boundaryRestitution: number;
   initialX: number;
   initialVx: number;
@@ -17,6 +18,7 @@ const defaults: RollerCoasterParams = {
   trackAmplitude: 0.55,
   trackFrequency: 1.35,
   trackTilt: 0.05,
+  boundaryMode: 0,
   boundaryRestitution: 0.85,
   initialX: -1.35,
   initialVx: 0,
@@ -80,7 +82,17 @@ export class RollerCoaster implements SimulationModel {
   resolveBounds(minX: number, maxX: number): number {
     let impact = 0;
     const e = this.params.boundaryRestitution;
+    const mode = this.params.boundaryMode;
     let [x, vx] = this.state;
+    const range = Math.max(0.001, maxX - minX);
+
+    if (mode >= 0.5) {
+      while (x < minX) x += range;
+      while (x > maxX) x -= range;
+      this.state[0] = x;
+      this.state[1] = vx;
+      return 0;
+    }
 
     if (x < minX) {
       x = minX;

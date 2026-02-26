@@ -33,6 +33,52 @@ export const mountRollerCoasterControls = (root: HTMLElement, model: RollerCoast
   const c = document.createElement('div');
   c.className = 'controls';
   const p = model.getParams();
+  const refresh = () => mountRollerCoasterControls(root, model, onMutate);
+  const isClose = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) <= eps;
+
+  const optionRow = document.createElement('div');
+  optionRow.className = 'option-row';
+  const presetButton = (label: string, amplitude: number, frequency: number, tilt: number, damping: number) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    const active =
+      isClose(p.trackAmplitude, amplitude, 0.005) &&
+      isClose(p.trackFrequency, frequency, 0.005) &&
+      isClose(p.trackTilt, tilt, 0.005) &&
+      isClose(p.damping, damping, 0.005);
+    b.className = active ? '' : 'secondary';
+    b.textContent = label;
+    b.addEventListener('click', () => {
+      model.setParam('trackAmplitude', amplitude);
+      model.setParam('trackFrequency', frequency);
+      model.setParam('trackTilt', tilt);
+      model.setParam('damping', damping);
+      onMutate();
+      refresh();
+    });
+    return b;
+  };
+  optionRow.append(
+    presetButton('Balanced', 0.55, 1.35, 0.05, 0.04),
+    presetButton('Steep', 0.72, 1.55, 0.08, 0.08),
+    presetButton('Long Wave', 0.42, 0.86, 0.03, 0.03),
+  );
+
+  const boundaryRow = document.createElement('div');
+  boundaryRow.className = 'option-row';
+  const modeButton = (label: string, mode: number) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = p.boundaryMode === mode ? '' : 'secondary';
+    b.textContent = label;
+    b.addEventListener('click', () => {
+      model.setParam('boundaryMode', mode);
+      onMutate();
+      refresh();
+    });
+    return b;
+  };
+  boundaryRow.append(modeButton('Bounce', 0), modeButton('Wrap', 1));
 
   slider(c, 'Gravity', 1, 20, 0.1, p.gravity, (v) => {
     model.setParam('gravity', v);
@@ -59,5 +105,5 @@ export const mountRollerCoasterControls = (root: HTMLElement, model: RollerCoast
     onMutate();
   });
 
-  root.append(title, c);
+  root.append(title, optionRow, boundaryRow, c);
 };

@@ -58,6 +58,9 @@ export const mountAudioControls = (
 
   const controls = document.createElement('div');
   controls.className = 'controls';
+  const status = document.createElement('div');
+  status.className = 'audio-status';
+  status.textContent = `Audio: ${audio.getRuntimeStatus() === 'ready' ? 'Ready' : 'Locked (click once)'}`;
 
   const s = audio.getSettings();
 
@@ -111,9 +114,9 @@ export const mountAudioControls = (
     const sectionTitle = document.createElement('h3');
     sectionTitle.className = 'section-title';
     sectionTitle.textContent = 'Audio';
-    root.append(sectionTitle, controls);
+    root.append(sectionTitle, status, controls);
     return;
   }
 
-  root.append(controls);
+  root.append(status, controls);
 };

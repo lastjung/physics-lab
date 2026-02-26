@@ -25,6 +25,7 @@ export const rollerCoasterPlugin: SimulationPlugin = {
       trackFrequency:
         readValue(context.initialValues, 'trackFrequency', 'tf') ?? readValue(context.presetValues, 'trackFrequency') ?? defaults.trackFrequency,
       trackTilt: readValue(context.initialValues, 'trackTilt', 'tt') ?? readValue(context.presetValues, 'trackTilt') ?? defaults.trackTilt,
+      boundaryMode: readValue(context.initialValues, 'boundaryMode', 'bm') ?? readValue(context.presetValues, 'boundaryMode') ?? defaults.boundaryMode,
       boundaryRestitution:
         readValue(context.initialValues, 'boundaryRestitution', 'be') ??
         readValue(context.presetValues, 'boundaryRestitution') ??
@@ -45,6 +46,11 @@ export const rollerCoasterPlugin: SimulationPlugin = {
     let lastImpactAt = 0;
 
     const redraw = () => {
+      const [xRaw, vxRaw] = model.getState();
+      if (Math.abs(vxRaw) > 4.8) {
+        model.setState([xRaw, Math.sign(vxRaw) * 4.8]);
+      }
+
       const b = renderer.getBounds();
       const impact = model.resolveBounds(b.minX, b.maxX);
       if (impact > 0.12) {
@@ -70,6 +76,7 @@ export const rollerCoasterPlugin: SimulationPlugin = {
         trackAmplitude: p.trackAmplitude,
         trackFrequency: p.trackFrequency,
         trackTilt: p.trackTilt,
+        boundaryMode: p.boundaryMode,
         boundaryRestitution: p.boundaryRestitution,
         initialX: p.initialX,
         initialVx: p.initialVx,
@@ -153,7 +160,7 @@ export const rollerCoasterPlugin: SimulationPlugin = {
 
       const tilt = model.getParams().trackTilt;
       const dir = tilt >= 0 ? 1 : -1;
-      model.setState([x, 0.42 * dir]);
+      model.setState([x, 0.22 * dir]);
       redraw();
     };
 

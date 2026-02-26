@@ -7,6 +7,8 @@ export interface AudioSettings {
   muteMusic: boolean;
 }
 
+export type SfxProfileId = 'default' | 'pendulum' | 'collision' | 'cradle' | 'coaster';
+
 const STORAGE_KEY = 'physics-lab-audio-v1';
 const SFX_GAIN_BOOST = 4;
 const PIANO_SHORTS: string[] = [
@@ -80,6 +82,7 @@ export class AudioEngine {
   private readonly stepScaleHz = [523.25, 587.33, 659.25, 783.99, 880];
   private stepScaleIndex = 0;
   private lastStepSfxAt = 0;
+  private sfxProfile: SfxProfileId = 'default';
 
   private readonly bgm: HTMLAudioElement;
 
@@ -94,6 +97,15 @@ export class AudioEngine {
 
   getSettings(): AudioSettings {
     return { ...this.settings };
+  }
+
+  getRuntimeStatus(): 'locked' | 'ready' {
+    if (!this.context) return 'locked';
+    return this.context.state === 'running' ? 'ready' : 'locked';
+  }
+
+  setSfxProfile(profile: SfxProfileId): void {
+    this.sfxProfile = profile;
   }
 
   private async ensureGraph(): Promise<void> {
@@ -251,16 +263,17 @@ export class AudioEngine {
     if (this.context.state === 'suspended') return;
 
     const now = this.context.currentTime;
-    const velocity = 0.13 * clamp(intensity, 0.2, 1.8);
+    const profile = this.getSfxProfileConfig();
+    const velocity = 0.13 * profile.level * clamp(intensity, 0.2, 1.8);
 
     if (type === 'click') {
-      this.playPianoKey(now, 659.25, 0.2, velocity * 0.9);
+      this.playPianoKey(now, 659.25, 0.2, velocity * 0.9 * profile.clickMul);
       return;
     }
 
     if (type === 'step') {
       // Use a 5-note pentatonic cycle to keep repeated collisions musical.
-      if (now - this.lastStepSfxAt < 0.035) return;
+      if (now - this.lastStepSfxAt < profile.stepGate) return;
       this.lastStepSfxAt = now;
 
       const i = this.stepScaleIndex;
@@ -270,25 +283,48 @@ export class AudioEngine {
       const main = base * (lift > 1.15 ? 2 : 1);
       const accent = this.stepScaleHz[(i + 2) % this.stepScaleHz.length] * 0.5;
 
-      this.playPianoKey(now, main, 0.24, velocity * 1.02);
-      this.playPianoKey(now + 0.032, accent, 0.2, velocity * 0.32);
+      this.playPianoKey(now, main, 0.24, velocity * 1.02 * profile.stepMul);
+      this.playPianoKey(now + 0.032, accent, 0.2, velocity * 0.32 * profile.stepMul);
       return;
     }
 
     if (type === 'drag-start') {
-      this.playPianoKey(now, 493.88, 0.16, velocity * 0.7);
+      this.playPianoKey(now, 493.88, 0.16, velocity * 0.7 * profile.dragMul);
       return;
     }
 
     if (type === 'drag-end') {
-      this.playPianoKey(now, 587.33, 0.18, velocity * 0.78);
+      this.playPianoKey(now, 587.33, 0.18, velocity * 0.78 * profile.dragMul);
       return;
     }
 
     // reset
-    this.playPianoKey(now, 523.25, 0.18, velocity * 0.62);
-    this.playPianoKey(now + 0.05, 659.25, 0.2, velocity * 0.58);
-    this.playPianoKey(now + 0.1, 783.99, 0.23, velocity * 0.66);
+    this.playPianoKey(now, 523.25, 0.18, velocity * 0.62 * profile.resetMul);
+    this.playPianoKey(now + 0.05, 659.25, 0.2, velocity * 0.58 * profile.resetMul);
+    this.playPianoKey(now + 0.1, 783.99, 0.23, velocity * 0.66 * profile.resetMul);
+  }
+
+  private getSfxProfileConfig(): {
+    level: number;
+    stepGate: number;
+    stepMul: number;
+    clickMul: number;
+    dragMul: number;
+    resetMul: number;
+  } {
+    if (this.sfxProfile === 'collision') {
+      return { level: 1.15, stepGate: 0.02, stepMul: 1.15, clickMul: 0.95, dragMul: 0.9, resetMul: 1 };
+    }
+    if (this.sfxProfile === 'cradle') {
+      return { level: 1.25, stepGate: 0.018, stepMul: 1.2, clickMul: 1, dragMul: 0.85, resetMul: 1 };
+    }
+    if (this.sfxProfile === 'coaster') {
+      return { level: 0.95, stepGate: 0.035, stepMul: 0.9, clickMul: 0.95, dragMul: 0.85, resetMul: 0.9 };
+    }
+    if (this.sfxProfile === 'pendulum') {
+      return { level: 0.9, stepGate: 0.04, stepMul: 0.85, clickMul: 0.9, dragMul: 0.8, resetMul: 0.9 };
+    }
+    return { level: 1, stepGate: 0.03, stepMul: 1, clickMul: 1, dragMul: 1, resetMul: 1 };
   }
 
   private playPianoKey(start: number, baseHz: number, duration: number, velocity: number): void {

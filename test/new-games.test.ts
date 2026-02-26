@@ -31,4 +31,14 @@ describe('New simulations sanity', () => {
     expect(k.x).toBeLessThanOrEqual(2.4);
     expect(k.y).toBeCloseTo(sim.trackY(k.x), 6);
   });
+
+  it('Roller Coaster wrap mode teleports across boundary without bounce', () => {
+    const sim = new RollerCoaster({ boundaryMode: 1, initialX: 2.9, initialVx: 1.1 });
+    const hit = sim.resolveBounds(-2.4, 2.4);
+    const k = sim.getKinematics();
+
+    expect(hit).toBe(0);
+    expect(k.x).toBeGreaterThanOrEqual(-2.4);
+    expect(k.x).toBeLessThanOrEqual(2.4);
+  });
 });

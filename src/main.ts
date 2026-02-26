@@ -148,7 +148,7 @@ const layout = document.createElement('div');
 layout.className = 'layout';
 
 const stagePanel = document.createElement('section');
-stagePanel.className = 'panel';
+stagePanel.className = 'panel stage-panel';
 const menuPanel = document.createElement('aside');
 menuPanel.className = 'panel menu-panel';
 
@@ -222,7 +222,13 @@ const canvas = document.createElement('canvas');
 canvas.width = 780;
 canvas.height = 520;
 
-stagePanel.append(librarySection, canvas);
+const stageCanvasWrap = document.createElement('div');
+stageCanvasWrap.className = 'stage-canvas-wrap';
+const hudEl = document.createElement('div');
+hudEl.className = 'stage-hud';
+stageCanvasWrap.append(canvas, hudEl);
+
+stagePanel.append(librarySection, stageCanvasWrap);
 
 const commonMenu = createMenuSection('Global Controls', true);
 
@@ -267,6 +273,16 @@ shell.append(topbar, layout);
 app.append(shell);
 
 const audio = new AudioEngine();
+const resolveSfxProfile = (): 'default' | 'pendulum' | 'collision' | 'cradle' | 'coaster' => {
+  if (activePreset.id === 'collision-lab') return 'collision';
+  if (activePreset.id === 'newtons-cradle') return 'cradle';
+  if (activePreset.id === 'roller-coaster') return 'coaster';
+  if (activePreset.pluginId === 'pendulum' || activePreset.pluginId === 'double-pendulum' || activePreset.pluginId === 'driven-pendulum') {
+    return 'pendulum';
+  }
+  return 'default';
+};
+audio.setSfxProfile(resolveSfxProfile());
 const renderAudioControls = () => {
   mountAudioControls(audioMenu.body, audio, renderAudioControls, false);
 };
@@ -299,6 +315,7 @@ const active: ActivePlugin = plugin.create({
   presetValues: activePreset.params,
   onStats: (line1, line2) => {
     statsEl.innerHTML = `${line1}<br>${line2}`;
+    hudEl.textContent = `${line1} | ${line2}`;
   },
   onStateChange: (values) => {
     syncUrlState(activePreset.id, values);

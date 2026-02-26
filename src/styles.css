@@ -105,6 +105,30 @@ canvas {
   background: linear-gradient(180deg, #f8fbff 0%, #ebf2fb 100%);
 }
 
+.stage-canvas-wrap {
+  position: relative;
+}
+
+.stage-hud {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 2;
+  max-width: calc(100% - 24px);
+  border: 1px solid #c9daec;
+  border-radius: 10px;
+  background: rgba(241, 247, 253, 0.92);
+  color: #24435f;
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 6px 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
 .library-section {
   border: 1px solid #dce7f1;
   border-radius: 12px;
@@ -259,6 +283,12 @@ canvas {
   gap: 10px;
 }
 
+.option-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .control-head {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -379,6 +409,15 @@ button.secondary {
 .audio-value {
   font-size: 11px;
   color: #5a7088;
+}
+
+.audio-status {
+  font-size: 11px;
+  color: #49637d;
+  background: #eef5fc;
+  border: 1px solid #d4e3f1;
+  border-radius: 8px;
+  padding: 5px 8px;
 }
 
 .help-text {
