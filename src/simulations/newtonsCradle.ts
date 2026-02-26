@@ -97,26 +97,32 @@ export class NewtonsCradle implements SimulationModel {
     const x = this.state.slice(0, BALL_COUNT);
     const v = this.state.slice(BALL_COUNT, BALL_COUNT * 2);
     let maxImpact = 0;
+    const minDistance = radius * 2;
+    const solvePass = () => {
+      for (let i = 0; i < BALL_COUNT - 1; i += 1) {
+        const left = anchor[i] + x[i];
+        const right = anchor[i + 1] + x[i + 1];
+        const gap = right - left;
+        if (gap >= minDistance) continue;
 
-    for (let i = 0; i < BALL_COUNT - 1; i += 1) {
-      const left = anchor[i] + x[i];
-      const right = anchor[i + 1] + x[i + 1];
-      const minDistance = radius * 2;
-      const gap = right - left;
+        const overlap = minDistance - gap;
+        // Small bias helps prevent persistent interpenetration/jitter.
+        const correction = overlap * 0.5 + 1e-4;
+        x[i] -= correction;
+        x[i + 1] += correction;
 
-      if (gap >= minDistance) continue;
+        const relative = v[i + 1] - v[i];
+        if (relative >= 0) continue;
 
-      const overlap = minDistance - gap;
-      x[i] -= overlap * 0.5;
-      x[i + 1] += overlap * 0.5;
+        const impulse = (-(1 + restitution) * relative) / (1 / mass + 1 / mass);
+        v[i] -= impulse / mass;
+        v[i + 1] += impulse / mass;
+        maxImpact = Math.max(maxImpact, Math.abs(relative));
+      }
+    };
 
-      const relative = v[i + 1] - v[i];
-      if (relative >= 0) continue;
-
-      const impulse = (-(1 + restitution) * relative) / (1 / mass + 1 / mass);
-      v[i] -= impulse / mass;
-      v[i + 1] += impulse / mass;
-      maxImpact = Math.max(maxImpact, Math.abs(relative));
+    for (let pass = 0; pass < 3; pass += 1) {
+      solvePass();
     }
 
     for (let i = 0; i < BALL_COUNT; i += 1) {

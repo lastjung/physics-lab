@@ -1,4 +1,4 @@
-import { RollerCoaster } from '../simulations/rollerCoaster';
+import { RollerCoasterTwoBalls } from '../simulations/rollerCoasterTwoBalls';
 
 const slider = (root: HTMLElement, label: string, min: number, max: number, step: number, value: number, onChange: (v: number) => void) => {
   const wrap = document.createElement('label');
@@ -25,76 +25,30 @@ const slider = (root: HTMLElement, label: string, min: number, max: number, step
   root.append(wrap);
 };
 
-export const mountRollerCoasterControls = (root: HTMLElement, model: RollerCoaster, onMutate: () => void): void => {
+export const mountRollerCoasterTwoBallsControls = (root: HTMLElement, model: RollerCoasterTwoBalls, onMutate: () => void): void => {
   root.innerHTML = '';
   const title = document.createElement('h3');
   title.className = 'section-title';
-  title.textContent = 'Roller Coaster';
+  title.textContent = 'Coaster Two Balls';
   const c = document.createElement('div');
   c.className = 'controls';
   const p = model.getParams();
-  const refresh = () => mountRollerCoasterControls(root, model, onMutate);
-  const isClose = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) <= eps;
-
-  const optionRow = document.createElement('div');
-  optionRow.className = 'option-row';
   const lengthRow = document.createElement('div');
   lengthRow.className = 'option-row';
-  const presetButton = (label: string, amplitude: number, frequency: number, tilt: number, damping: number) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    const active =
-      isClose(p.trackAmplitude, amplitude, 0.005) &&
-      isClose(p.trackFrequency, frequency, 0.005) &&
-      isClose(p.trackTilt, tilt, 0.005) &&
-      isClose(p.damping, damping, 0.005);
-    b.className = active ? '' : 'secondary';
-    b.textContent = label;
-    b.addEventListener('click', () => {
-      model.setParam('trackAmplitude', amplitude);
-      model.setParam('trackFrequency', frequency);
-      model.setParam('trackTilt', tilt);
-      model.setParam('damping', damping);
-      onMutate();
-      refresh();
-    });
-    return b;
-  };
-  optionRow.append(
-    presetButton('Balanced', 0.55, 1.35, 0.05, 0.04),
-    presetButton('Steep', 0.72, 1.55, 0.08, 0.08),
-    presetButton('Long Wave', 0.42, 0.86, 0.03, 0.03),
-  );
-
+  const isClose = (a: number, b: number, eps = 0.05) => Math.abs(a - b) <= eps;
   const lengthButton = (label: string, frequency: number) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = isClose(p.trackFrequency, frequency, 0.05) ? '' : 'secondary';
+    b.className = isClose(p.trackFrequency, frequency) ? '' : 'secondary';
     b.textContent = label;
     b.addEventListener('click', () => {
       model.setParam('trackFrequency', frequency);
       onMutate();
-      refresh();
+      mountRollerCoasterTwoBallsControls(root, model, onMutate);
     });
     return b;
   };
   lengthRow.append(lengthButton('Short', 1.9), lengthButton('Medium', 1.35), lengthButton('Long', 0.85));
-
-  const boundaryRow = document.createElement('div');
-  boundaryRow.className = 'option-row';
-  const modeButton = (label: string, mode: number) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = p.boundaryMode === mode ? '' : 'secondary';
-    b.textContent = label;
-    b.addEventListener('click', () => {
-      model.setParam('boundaryMode', mode);
-      onMutate();
-      refresh();
-    });
-    return b;
-  };
-  boundaryRow.append(modeButton('Bounce', 0), modeButton('Wrap', 1));
 
   slider(c, 'Gravity', 1, 20, 0.1, p.gravity, (v) => {
     model.setParam('gravity', v);
@@ -116,10 +70,10 @@ export const mountRollerCoasterControls = (root: HTMLElement, model: RollerCoast
     model.setParam('trackTilt', v);
     onMutate();
   });
-  slider(c, 'Wall Bounce', 0.2, 1, 0.01, p.boundaryRestitution, (v) => {
-    model.setParam('boundaryRestitution', v);
+  slider(c, 'Ball Restitution', 0.5, 1, 0.01, p.ballRestitution, (v) => {
+    model.setParam('ballRestitution', v);
     onMutate();
   });
 
-  root.append(title, optionRow, lengthRow, boundaryRow, c);
+  root.append(title, lengthRow, c);
 };

@@ -11,6 +11,7 @@ import { newtonsCradlePlugin } from './plugins/NewtonsCradlePlugin';
 import { orbitPlugin } from './plugins/OrbitPlugin';
 import { pendulumPlugin } from './plugins/PendulumPlugin';
 import { rollerCoasterPlugin } from './plugins/RollerCoasterPlugin';
+import { rollerCoasterTwoBallsPlugin } from './plugins/RollerCoasterTwoBallsPlugin';
 import { springMassPlugin } from './plugins/SpringMassPlugin';
 import type { ActivePlugin, SimulationPlugin } from './plugins/types';
 import { getPresetById, simulationPresets } from './simulations/registry';
@@ -70,6 +71,7 @@ const plugins: Record<string, SimulationPlugin> = {
   [orbitPlugin.id]: orbitPlugin,
   [pendulumPlugin.id]: pendulumPlugin,
   [rollerCoasterPlugin.id]: rollerCoasterPlugin,
+  [rollerCoasterTwoBallsPlugin.id]: rollerCoasterTwoBallsPlugin,
   [springMassPlugin.id]: springMassPlugin,
 };
 
@@ -273,10 +275,13 @@ shell.append(topbar, layout);
 app.append(shell);
 
 const audio = new AudioEngine();
+let soundEnabled = false;
+let playOnlySound = true;
 const resolveSfxProfile = (): 'default' | 'pendulum' | 'collision' | 'cradle' | 'coaster' => {
   if (activePreset.id === 'collision-lab') return 'collision';
   if (activePreset.id === 'newtons-cradle') return 'cradle';
   if (activePreset.id === 'roller-coaster') return 'coaster';
+  if (activePreset.id === 'roller-coaster-two-balls') return 'coaster';
   if (activePreset.pluginId === 'pendulum' || activePreset.pluginId === 'double-pendulum' || activePreset.pluginId === 'driven-pendulum') {
     return 'pendulum';
   }
@@ -285,12 +290,24 @@ const resolveSfxProfile = (): 'default' | 'pendulum' | 'collision' | 'cradle' | 
 audio.setSfxProfile(resolveSfxProfile());
 const renderAudioControls = () => {
   mountAudioControls(audioMenu.body, audio, renderAudioControls, false);
+  const modeRow = document.createElement('label');
+  modeRow.className = 'audio-inline-mute';
+  const modeInput = document.createElement('input');
+  modeInput.type = 'checkbox';
+  modeInput.checked = playOnlySound;
+  const modeText = document.createElement('span');
+  modeText.textContent = 'Play only';
+  modeInput.addEventListener('change', () => {
+    playOnlySound = modeInput.checked;
+    renderAudioControls();
+  });
+  modeRow.append(modeInput, modeText);
+  audioMenu.body.append(modeRow);
 };
 renderAudioControls();
 const unlockAudio = () => {
   audio.ensureAudibleDefaults();
   void audio.unlock();
-  void audio.triggerSfx('click', 0.95);
   renderAudioControls();
 };
 window.addEventListener('pointerdown', unlockAudio, { once: true });
@@ -321,12 +338,15 @@ const active: ActivePlugin = plugin.create({
     syncUrlState(activePreset.id, values);
   },
   onSfx: (type, intensity) => {
+    if (playOnlySound && !soundEnabled) return;
     audio.triggerSfx(type, intensity);
   },
   onPendulumMotion: (omega, theta) => {
+    if (playOnlySound && !soundEnabled) return;
     audio.setPendulumWhoosh(omega, theta);
   },
   onSpringMotion: (velocity, displacement) => {
+    if (playOnlySound && !soundEnabled) return;
     audio.setSpringMotion(velocity, displacement);
   },
 });
@@ -338,44 +358,49 @@ const refreshPlayLabel = () => {
 playPauseButton.addEventListener('click', () => {
   if (active.isRunning()) {
     active.pause();
+    soundEnabled = false;
     audio.toggleMusic(false);
     audio.setPendulumWhoosh(0, 0);
     audio.setSpringMotion(0, 0);
   } else {
     active.play();
+    soundEnabled = true;
     audio.toggleMusic(true);
   }
-  audio.triggerSfx('click', 0.9);
+  if (!playOnlySound || soundEnabled) audio.triggerSfx('click', 0.9);
   refreshPlayLabel();
 });
 
 resetButton.addEventListener('click', () => {
   active.pause();
+  soundEnabled = false;
   audio.toggleMusic(false);
   audio.setPendulumWhoosh(0, 0);
   audio.setSpringMotion(0, 0);
   active.reset();
-  audio.triggerSfx('reset', 1);
+  if (!playOnlySound) audio.triggerSfx('reset', 1);
   refreshPlayLabel();
 });
 
 stepButton.addEventListener('click', () => {
   active.pause();
+  soundEnabled = false;
   audio.toggleMusic(false);
   audio.setPendulumWhoosh(0, 0);
   audio.setSpringMotion(0, 0);
   active.step(1);
-  audio.triggerSfx('step', 0.9);
+  if (!playOnlySound) audio.triggerSfx('step', 0.9);
   refreshPlayLabel();
 });
 
 stepFastButton.addEventListener('click', () => {
   active.pause();
+  soundEnabled = false;
   audio.toggleMusic(false);
   audio.setPendulumWhoosh(0, 0);
   audio.setSpringMotion(0, 0);
   active.step(2);
-  audio.triggerSfx('step', 1);
+  if (!playOnlySound) audio.triggerSfx('step', 1);
   refreshPlayLabel();
 });
 
@@ -391,36 +416,40 @@ window.addEventListener('keydown', (event) => {
     event.preventDefault();
     if (active.isRunning()) {
       active.pause();
+      soundEnabled = false;
       audio.toggleMusic(false);
       audio.setPendulumWhoosh(0, 0);
       audio.setSpringMotion(0, 0);
     } else {
       active.play();
+      soundEnabled = true;
       audio.toggleMusic(true);
     }
-    audio.triggerSfx('click', 0.9);
+    if (!playOnlySound || soundEnabled) audio.triggerSfx('click', 0.9);
     refreshPlayLabel();
     return;
   }
 
   if (event.key === 'r' || event.key === 'R') {
     active.pause();
+    soundEnabled = false;
     audio.toggleMusic(false);
     audio.setPendulumWhoosh(0, 0);
     audio.setSpringMotion(0, 0);
     active.reset();
-    audio.triggerSfx('reset', 1);
+    if (!playOnlySound) audio.triggerSfx('reset', 1);
     refreshPlayLabel();
     return;
   }
 
   if (event.code === 'Period') {
     active.pause();
+    soundEnabled = false;
     audio.toggleMusic(false);
     audio.setPendulumWhoosh(0, 0);
     audio.setSpringMotion(0, 0);
     active.step(event.shiftKey ? 2 : 1);
-    audio.triggerSfx('step', event.shiftKey ? 1 : 0.9);
+    if (!playOnlySound) audio.triggerSfx('step', event.shiftKey ? 1 : 0.9);
     refreshPlayLabel();
   }
 });

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { CartPendulum } from '../src/simulations/cartPendulum';
 import { NewtonsCradle } from '../src/simulations/newtonsCradle';
 import { RollerCoaster } from '../src/simulations/rollerCoaster';
+import { RollerCoasterTwoBalls } from '../src/simulations/rollerCoasterTwoBalls';
 
 describe('New simulations sanity', () => {
   it("Newton's Cradle exchanges momentum after collision resolution", () => {
@@ -40,5 +41,16 @@ describe('New simulations sanity', () => {
     expect(hit).toBe(0);
     expect(k.x).toBeGreaterThanOrEqual(-2.4);
     expect(k.x).toBeLessThanOrEqual(2.4);
+  });
+
+  it('Coaster Two Balls resolves inter-ball collision', () => {
+    const sim = new RollerCoasterTwoBalls({ ballRestitution: 0.98 });
+    sim.setState([-0.05, 1.2, 0.05, -0.4]);
+    const impact = sim.resolveBallCollision();
+    const k = sim.getKinematics();
+
+    expect(impact).toBeGreaterThan(0);
+    expect(k.vx1).toBeLessThan(1.2);
+    expect(k.vx2).toBeGreaterThan(-0.4);
   });
 });

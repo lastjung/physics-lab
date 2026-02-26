@@ -11,7 +11,8 @@ export interface SimulationPreset {
     | 'collision-lab'
     | 'newtons-cradle'
     | 'cart-pendulum'
-    | 'roller-coaster';
+    | 'roller-coaster'
+    | 'roller-coaster-two-balls';
   category: 'Oscillation' | 'Mechanics';
   summary: string;
   help: string;
@@ -169,6 +170,25 @@ export const simulationPresets: SimulationPreset[] = [
       boundaryMode: 0,
       damping: 0.04,
       initialX: -1.35,
+    },
+  },
+  {
+    id: 'roller-coaster-two-balls',
+    name: 'Coaster Two Balls',
+    pluginId: 'roller-coaster-two-balls',
+    category: 'Mechanics',
+    summary: 'Two balls moving on the same track with collisions.',
+    help:
+      '한 트랙 위에서 2개 공이 동시에 움직이며 서로 충돌합니다.\n트랙 파라미터와 충돌 탄성(Ball Restitution)을 조절해 에너지 전달 패턴을 확인할 수 있습니다.\n두 공 모두 드래그로 시작 위치를 조절할 수 있습니다.',
+    params: {
+      trackAmplitude: 0.55,
+      trackFrequency: 1.35,
+      trackTilt: 0.05,
+      boundaryMode: 0,
+      damping: 0.05,
+      ballRestitution: 0.94,
+      initialX1: -1.25,
+      initialX2: 0.55,
     },
   },
 ];
