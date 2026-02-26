@@ -1,7 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap');
+
 :root {
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
-  color: #1f2937;
-  background: radial-gradient(circle at top right, #dbeafe, #f8fafc 45%, #e2e8f0);
+  --bg: #f8fafc;
+  --bg-grad-a: #f8fafc;
+  --bg-grad-b: #eef4ff;
+  --panel: rgba(255, 255, 255, 0.92);
+  --panel-border: #d7e3f0;
+  --text: #10233b;
+  --muted: #51667d;
+  --primary: #0ea5e9;
+  --primary-strong: #0369a1;
+  --cta: #10b981;
+  --danger: #ef4444;
+  --shadow: 0 16px 34px rgba(16, 35, 59, 0.08);
+
+  font-family: 'Fira Sans', 'Segoe UI', sans-serif;
+  color: var(--text);
 }
 
 * {
@@ -11,12 +25,16 @@
 body {
   margin: 0;
   min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 8%, #dff4ff 0, transparent 28%),
+    radial-gradient(circle at 88% 18%, #d8ecff 0, transparent 30%),
+    linear-gradient(170deg, var(--bg-grad-a), var(--bg-grad-b));
 }
 
 #app {
-  max-width: 1180px;
+  max-width: 1220px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 22px;
 }
 
 .app-shell {
@@ -24,72 +42,181 @@ body {
   gap: 14px;
 }
 
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 14px;
+}
+
 .topbar {
   display: grid;
   grid-template-columns: auto 1fr auto;
+  gap: 12px;
   align-items: center;
-  gap: 10px;
+}
+
+.brand-stack {
+  display: grid;
+  gap: 2px;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: 0.01em;
+}
+
+.title-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.game-library {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 16px;
-}
-
-.panel {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
-  padding: 12px;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 14px;
 }
 
 canvas {
   width: 100%;
-  max-width: 780px;
+  max-width: 100%;
+  border-radius: 14px;
+  border: 1px solid #d0dfee;
+  background: linear-gradient(180deg, #f8fbff 0%, #ebf2fb 100%);
+}
+
+.library-section {
+  border: 1px solid #dce7f1;
   border-radius: 12px;
-  border: 1px solid #cbd5e1;
-  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  background: #fdfefe;
+  padding: 11px;
+  margin-bottom: 12px;
 }
 
-h1 {
-  margin: 0;
-  font-size: 24px;
+.recent-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
 }
 
-.section-title {
-  margin: 2px 0 8px;
+.recent-title {
+  font-size: 12px;
+  color: #51667d;
+  font-weight: 600;
+}
+
+.mini-chip {
+  border: 1px solid #d1e0ee;
+  background: #eef5fd;
+  color: #28435f;
+  border-radius: 999px;
+  font-size: 11px;
+  padding: 3px 9px;
+}
+
+.mini-chip.active {
+  background: #dbedff;
+  border-color: #9cc8f0;
+}
+
+.game-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.game-card {
+  border: 1px solid #d5e3f0;
+  border-radius: 10px;
+  background: #f7fbff;
+  padding: 9px;
+  cursor: pointer;
+  transition: border-color 170ms ease, transform 170ms ease, box-shadow 170ms ease;
+}
+
+.game-card:hover {
+  transform: translateY(-1px);
+  border-color: #93c5fd;
+  box-shadow: 0 8px 16px rgba(14, 165, 233, 0.16);
+}
+
+.game-card.active {
+  border-color: #3b82f6;
+  background: #ecf5ff;
+}
+
+.game-card-top {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge {
+  font-size: 10px;
+  background: #dceeff;
+  color: #19476f;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-weight: 700;
+}
+
+.favorite-btn {
+  border: 1px solid #d2deea;
+  background: #f4f8fc;
+  color: #597086;
+  border-radius: 8px;
+  padding: 2px 7px;
   font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #475569;
+  line-height: 1.2;
+}
+
+.favorite-btn.active {
+  color: #f59e0b;
+  border-color: #f6d28a;
+  background: #fff8e9;
+}
+
+.game-summary {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #526a81;
+  line-height: 1.35;
 }
 
 .menu-panel {
   display: grid;
   gap: 12px;
+  align-content: start;
 }
 
 .menu-section {
-  border: 1px solid #dbe2eb;
-  border-radius: 10px;
-  padding: 10px;
+  border: 1px solid #dce7f1;
+  border-radius: 12px;
+  background: #fdfefe;
+  padding: 11px;
 }
 
-.game-library {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.game-btn {
-  padding: 7px 10px;
-  font-size: 13px;
-}
-
-.game-btn.active {
-  background: #1d4ed8;
-  color: #fff;
+.section-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #58718b;
+  font-weight: 700;
 }
 
 .controls {
@@ -97,57 +224,144 @@ h1 {
   gap: 10px;
 }
 
-label {
-  font-size: 14px;
+.control-head {
   display: grid;
-  gap: 4px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
 }
 
-input[type="range"] {
+.control-value {
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  color: #38556f;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: #29435e;
+}
+
+input[type='range'] {
   width: 100%;
+  accent-color: var(--primary);
 }
 
 .buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 button {
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
   padding: 8px 12px;
-  border-radius: 8px;
   cursor: pointer;
-  background: #0f172a;
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  font-family: 'Fira Sans', sans-serif;
+  font-weight: 600;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:focus-visible {
+  outline: 3px solid rgba(14, 165, 233, 0.28);
+  outline-offset: 1px;
+}
+
+button:not(.secondary):not(.game-btn) {
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
   color: #fff;
+  box-shadow: 0 8px 18px rgba(14, 165, 233, 0.28);
 }
 
 button.secondary {
-  background: #475569;
+  background: #eaf2fb;
+  color: #27435f;
+  border-color: #cfe0f1;
+}
+
+.game-btn {
+  background: #edf4fb;
+  color: #22405e;
+  border: 1px solid #d0e0f0;
+  font-size: 13px;
+  padding: 7px 11px;
+}
+
+.game-btn.active {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #fff;
+  border-color: #1d4ed8;
 }
 
 .stats {
-  font-size: 14px;
-  color: #334155;
-  line-height: 1.45;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  color: #27435f;
+  line-height: 1.55;
+  background: #f4f8fc;
+  border: 1px solid #d8e4f0;
+  border-radius: 9px;
+  padding: 8px;
+  word-break: break-word;
+  min-height: 3.5em;
+  overflow: auto;
+}
+
+.audio-slider {
+  gap: 6px;
+}
+
+.audio-slider-head {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.audio-inline-mute {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #4d637a;
+}
+
+.audio-inline-mute input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary);
+}
+
+.audio-value {
+  font-size: 11px;
+  color: #5a7088;
 }
 
 .mobile-menu-btn {
   display: none;
 }
 
-@media (max-width: 860px) {
-  #app {
-    padding: 16px;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
   }
+}
 
+@media (max-width: 980px) {
   .topbar {
     grid-template-columns: 1fr auto;
   }
 
   .game-library {
     grid-column: 1 / -1;
-    order: 3;
   }
 
   .mobile-menu-btn {
@@ -159,6 +373,10 @@ button.secondary {
     grid-template-columns: 1fr;
   }
 
+  .game-card-grid {
+    grid-template-columns: 1fr;
+  }
+
   .menu-panel {
     display: none;
   }
@@ -166,8 +384,19 @@ button.secondary {
   .menu-panel.open {
     display: grid;
   }
+}
 
-  canvas {
-    max-width: 100%;
+@media (max-width: 700px) {
+  #app {
+    padding: 14px;
+  }
+
+  .panel {
+    padding: 10px;
+    border-radius: 13px;
+  }
+
+  .app-title {
+    font-size: 20px;
   }
 }

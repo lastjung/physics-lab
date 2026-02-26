@@ -47,7 +47,11 @@ export const springMassPlugin: SimulationPlugin = {
     const redraw = () => {
       renderer.draw();
       const k = model.getKinematics();
-      context.onStats(`t=${model.getTime().toFixed(2)}s | x=${k.x.toFixed(3)} m | v=${k.v.toFixed(3)} m/s | E=${k.total.toFixed(3)} J`);
+      context.onSpringMotion?.(k.v, k.x);
+      context.onStats(
+        `t=${model.getTime().toFixed(2)}s | x=${k.x.toFixed(2)} m`,
+        `v=${k.v.toFixed(2)} m/s | E=${k.total.toFixed(2)} J`,
+      );
       const p = model.getParams();
       context.onStateChange({
         mass: p.mass,
@@ -101,6 +105,7 @@ export const springMassPlugin: SimulationPlugin = {
       context.canvas.setPointerCapture(event.pointerId);
       resumeAfterDrag = runner.isRunning();
       runner.stop();
+      context.onSfx('drag-start', 0.9);
       applyPointerX(event);
     });
 
@@ -114,6 +119,7 @@ export const springMassPlugin: SimulationPlugin = {
       dragPointerId = null;
       context.canvas.releasePointerCapture(event.pointerId);
       if (resumeAfterDrag) runner.start();
+      context.onSfx('drag-end', 0.8);
       resumeAfterDrag = false;
     };
 
@@ -130,6 +136,7 @@ export const springMassPlugin: SimulationPlugin = {
       step: (count = 1) => runner.step(count),
       destroy: () => {
         runner.stop();
+        context.onSpringMotion?.(0, 0);
         disposers.forEach((dispose) => dispose());
         context.menuRoot.innerHTML = '';
       },

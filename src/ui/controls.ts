@@ -10,9 +10,13 @@ const makeSlider = (
   onChange: (value: number) => void,
 ): void => {
   const wrapper = document.createElement('label');
-  wrapper.textContent = label;
+  const head = document.createElement('div');
+  head.className = 'control-head';
+  const labelEl = document.createElement('span');
+  labelEl.textContent = label;
 
   const valueEl = document.createElement('span');
+  valueEl.className = 'control-value';
   valueEl.textContent = value.toFixed(2);
 
   const input = document.createElement('input');
@@ -27,7 +31,8 @@ const makeSlider = (
     onChange(next);
   });
 
-  wrapper.append(input, valueEl);
+  head.append(labelEl, valueEl);
+  wrapper.append(head, input);
   root.append(wrapper);
 };
 

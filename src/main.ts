@@ -1,21 +1,75 @@
 import './styles.css';
 
+import { AudioEngine } from './core/audio/audioEngine';
 import { readUrlState, replaceUrlState } from './core/urlState';
+import { collisionLabPlugin } from './plugins/CollisionLabPlugin';
+import { coupledSpringPlugin } from './plugins/CoupledSpringPlugin';
+import { doublePendulumPlugin } from './plugins/DoublePendulumPlugin';
+import { drivenPendulumPlugin } from './plugins/DrivenPendulumPlugin';
+import { orbitPlugin } from './plugins/OrbitPlugin';
 import { pendulumPlugin } from './plugins/PendulumPlugin';
 import { springMassPlugin } from './plugins/SpringMassPlugin';
 import type { ActivePlugin, SimulationPlugin } from './plugins/types';
 import { getPresetById, simulationPresets } from './simulations/registry';
+import { mountAudioControls } from './ui/audioControls';
 
 const app = document.getElementById('app');
 if (!app) throw new Error('Missing root element');
 
+const RECENT_KEY = 'physics-lab-recent-v1';
+const FAVORITE_KEY = 'physics-lab-favorite-v1';
+
+const loadRecent = (): string[] => {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((v): v is string => typeof v === 'string');
+  } catch {
+    return [];
+  }
+};
+
+const saveRecent = (items: string[]): void => {
+  localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, 3)));
+};
+
+const loadFavorite = (): string | null => localStorage.getItem(FAVORITE_KEY);
+const saveFavorite = (id: string | null): void => {
+  if (!id) {
+    localStorage.removeItem(FAVORITE_KEY);
+    return;
+  }
+  localStorage.setItem(FAVORITE_KEY, id);
+};
+
+const choosePreset = (presetId: string): void => {
+  const preset = getPresetById(presetId);
+  const nextRecent = [preset.id, ...loadRecent().filter((id) => id !== preset.id)];
+  saveRecent(nextRecent);
+
+  const next = new URLSearchParams();
+  next.set('sim', preset.id);
+  for (const [key, value] of Object.entries(preset.params)) {
+    next.set(key, String(value));
+  }
+  window.location.search = next.toString();
+};
+
 const plugins: Record<string, SimulationPlugin> = {
+  [collisionLabPlugin.id]: collisionLabPlugin,
+  [coupledSpringPlugin.id]: coupledSpringPlugin,
+  [doublePendulumPlugin.id]: doublePendulumPlugin,
+  [drivenPendulumPlugin.id]: drivenPendulumPlugin,
+  [orbitPlugin.id]: orbitPlugin,
   [pendulumPlugin.id]: pendulumPlugin,
   [springMassPlugin.id]: springMassPlugin,
 };
 
 const urlState = readUrlState();
 const activePreset = getPresetById(urlState.simId);
+saveRecent([activePreset.id, ...loadRecent().filter((id) => id !== activePreset.id)]);
 
 const shell = document.createElement('div');
 shell.className = 'app-shell';
@@ -23,32 +77,35 @@ shell.className = 'app-shell';
 const topbar = document.createElement('header');
 topbar.className = 'topbar panel';
 
+const brandStack = document.createElement('div');
+brandStack.className = 'brand-stack';
+
 const title = document.createElement('h1');
 title.textContent = 'Physics Lab';
+title.className = 'app-title';
 
-const gameLibrary = document.createElement('div');
-gameLibrary.className = 'game-library';
+const titleNote = document.createElement('p');
+titleNote.className = 'title-note';
+titleNote.textContent = 'Interactive mechanics sandbox';
+
+brandStack.append(title, titleNote);
+
+const quickLibrary = document.createElement('div');
+quickLibrary.className = 'game-library';
+for (const preset of simulationPresets) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = preset.id === activePreset.id ? 'game-btn active' : 'game-btn secondary';
+  button.textContent = preset.name;
+  button.addEventListener('click', () => choosePreset(preset.id));
+  quickLibrary.append(button);
+}
 
 const mobileMenuButton = document.createElement('button');
 mobileMenuButton.className = 'secondary mobile-menu-btn';
 mobileMenuButton.textContent = 'Menu';
 
-for (const preset of simulationPresets) {
-  const button = document.createElement('button');
-  button.className = preset.id === activePreset.id ? 'game-btn active' : 'game-btn secondary';
-  button.textContent = preset.name;
-  button.addEventListener('click', () => {
-    const next = new URLSearchParams();
-    next.set('sim', preset.id);
-    for (const [key, value] of Object.entries(preset.params)) {
-      next.set(key, String(value));
-    }
-    window.location.search = next.toString();
-  });
-  gameLibrary.append(button);
-}
-
-topbar.append(title, gameLibrary, mobileMenuButton);
+topbar.append(brandStack, quickLibrary, mobileMenuButton);
 
 const layout = document.createElement('div');
 layout.className = 'layout';
@@ -58,10 +115,77 @@ stagePanel.className = 'panel';
 const menuPanel = document.createElement('aside');
 menuPanel.className = 'panel menu-panel';
 
+const librarySection = document.createElement('section');
+librarySection.className = 'library-section';
+const libraryTitle = document.createElement('h3');
+libraryTitle.className = 'section-title';
+libraryTitle.textContent = 'Game Library';
+
+const recentRow = document.createElement('div');
+recentRow.className = 'recent-row';
+const recentTitle = document.createElement('span');
+recentTitle.className = 'recent-title';
+recentTitle.textContent = 'Recent:';
+recentRow.append(recentTitle);
+
+for (const id of loadRecent()) {
+  const preset = getPresetById(id);
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = id === activePreset.id ? 'mini-chip active' : 'mini-chip';
+  chip.textContent = preset.name;
+  chip.addEventListener('click', () => choosePreset(preset.id));
+  recentRow.append(chip);
+}
+
+const cardGrid = document.createElement('div');
+cardGrid.className = 'game-card-grid';
+const favoriteId = loadFavorite();
+
+for (const preset of simulationPresets) {
+  const card = document.createElement('article');
+  card.className = preset.id === activePreset.id ? 'game-card active' : 'game-card';
+
+  const top = document.createElement('div');
+  top.className = 'game-card-top';
+
+  const name = document.createElement('strong');
+  name.textContent = preset.name;
+
+  const badge = document.createElement('span');
+  badge.className = 'badge';
+  badge.textContent = preset.category;
+
+  const favorite = document.createElement('button');
+  favorite.type = 'button';
+  favorite.className = favoriteId === preset.id ? 'favorite-btn active' : 'favorite-btn';
+  favorite.textContent = favoriteId === preset.id ? '★' : '☆';
+  favorite.title = 'Set favorite';
+  favorite.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const nextFavorite = loadFavorite() === preset.id ? null : preset.id;
+    saveFavorite(nextFavorite);
+    window.location.reload();
+  });
+
+  top.append(name, badge, favorite);
+
+  const summary = document.createElement('p');
+  summary.className = 'game-summary';
+  summary.textContent = preset.summary;
+
+  card.append(top, summary);
+  card.addEventListener('click', () => choosePreset(preset.id));
+  cardGrid.append(card);
+}
+
+librarySection.append(libraryTitle, recentRow, cardGrid);
+
 const canvas = document.createElement('canvas');
 canvas.width = 780;
 canvas.height = 520;
-stagePanel.append(canvas);
+
+stagePanel.append(librarySection, canvas);
 
 const commonMenu = document.createElement('section');
 commonMenu.className = 'menu-section';
@@ -85,7 +209,7 @@ stepButton.textContent = 'Step';
 
 const stepFastButton = document.createElement('button');
 stepFastButton.className = 'secondary';
-stepFastButton.textContent = 'Step x12';
+stepFastButton.textContent = 'x2';
 
 controlsRow.append(playPauseButton, resetButton, stepButton, stepFastButton);
 
@@ -94,13 +218,22 @@ statsEl.className = 'stats';
 
 commonMenu.append(commonTitle, controlsRow, statsEl);
 
+const audioMenu = document.createElement('section');
+audioMenu.className = 'menu-section';
+
 const gameMenu = document.createElement('section');
 gameMenu.className = 'menu-section';
 
-menuPanel.append(commonMenu, gameMenu);
+menuPanel.append(commonMenu, audioMenu, gameMenu);
 layout.append(stagePanel, menuPanel);
 shell.append(topbar, layout);
 app.append(shell);
+
+const audio = new AudioEngine();
+const renderAudioControls = () => {
+  mountAudioControls(audioMenu, audio, renderAudioControls);
+};
+renderAudioControls();
 
 let urlSyncHandle: number | null = null;
 const syncUrlState = (simId: string, values: Record<string, number>) => {
@@ -119,11 +252,20 @@ const active: ActivePlugin = plugin.create({
   menuRoot: gameMenu,
   initialValues: urlState.values,
   presetValues: activePreset.params,
-  onStats: (text) => {
-    statsEl.textContent = text;
+  onStats: (line1, line2) => {
+    statsEl.innerHTML = `${line1}<br>${line2}`;
   },
   onStateChange: (values) => {
     syncUrlState(activePreset.id, values);
+  },
+  onSfx: (type, intensity) => {
+    audio.triggerSfx(type, intensity);
+  },
+  onPendulumMotion: (omega, theta) => {
+    audio.setPendulumWhoosh(omega, theta);
+  },
+  onSpringMotion: (velocity, displacement) => {
+    audio.setSpringMotion(velocity, displacement);
   },
 });
 
@@ -134,27 +276,44 @@ const refreshPlayLabel = () => {
 playPauseButton.addEventListener('click', () => {
   if (active.isRunning()) {
     active.pause();
+    audio.toggleMusic(false);
+    audio.setPendulumWhoosh(0, 0);
+    audio.setSpringMotion(0, 0);
   } else {
     active.play();
+    audio.toggleMusic(true);
   }
+  audio.triggerSfx('click', 0.9);
   refreshPlayLabel();
 });
 
 resetButton.addEventListener('click', () => {
   active.pause();
+  audio.toggleMusic(false);
+  audio.setPendulumWhoosh(0, 0);
+  audio.setSpringMotion(0, 0);
   active.reset();
+  audio.triggerSfx('reset', 1);
   refreshPlayLabel();
 });
 
 stepButton.addEventListener('click', () => {
   active.pause();
+  audio.toggleMusic(false);
+  audio.setPendulumWhoosh(0, 0);
+  audio.setSpringMotion(0, 0);
   active.step(1);
+  audio.triggerSfx('step', 0.9);
   refreshPlayLabel();
 });
 
 stepFastButton.addEventListener('click', () => {
   active.pause();
-  active.step(12);
+  audio.toggleMusic(false);
+  audio.setPendulumWhoosh(0, 0);
+  audio.setSpringMotion(0, 0);
+  active.step(2);
+  audio.triggerSfx('step', 1);
   refreshPlayLabel();
 });
 
@@ -170,23 +329,36 @@ window.addEventListener('keydown', (event) => {
     event.preventDefault();
     if (active.isRunning()) {
       active.pause();
+      audio.toggleMusic(false);
+      audio.setPendulumWhoosh(0, 0);
+      audio.setSpringMotion(0, 0);
     } else {
       active.play();
+      audio.toggleMusic(true);
     }
+    audio.triggerSfx('click', 0.9);
     refreshPlayLabel();
     return;
   }
 
   if (event.key === 'r' || event.key === 'R') {
     active.pause();
+    audio.toggleMusic(false);
+    audio.setPendulumWhoosh(0, 0);
+    audio.setSpringMotion(0, 0);
     active.reset();
+    audio.triggerSfx('reset', 1);
     refreshPlayLabel();
     return;
   }
 
   if (event.code === 'Period') {
     active.pause();
-    active.step(event.shiftKey ? 12 : 1);
+    audio.toggleMusic(false);
+    audio.setPendulumWhoosh(0, 0);
+    audio.setSpringMotion(0, 0);
+    active.step(event.shiftKey ? 2 : 1);
+    audio.triggerSfx('step', event.shiftKey ? 1 : 0.9);
     refreshPlayLabel();
   }
 });

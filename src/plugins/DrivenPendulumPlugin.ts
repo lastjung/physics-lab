@@ -1,7 +1,7 @@
 import { SimulationRunner } from '../core/simulationRunner';
-import { PendulumCanvasRenderer } from '../render/pendulumCanvasRenderer';
-import { DampedPendulum } from '../simulations/dampedPendulum';
-import { mountPendulumControls } from '../ui/controls';
+import { DrivenPendulumCanvasRenderer } from '../render/drivenPendulumCanvasRenderer';
+import { DrivenPendulum } from '../simulations/drivenPendulum';
+import { mountDrivenPendulumControls } from '../ui/drivenPendulumControls';
 import type { ActivePlugin, PluginContext, SimulationPlugin } from './types';
 
 const readValue = (source: Record<string, number>, ...keys: string[]): number | undefined => {
@@ -11,17 +11,24 @@ const readValue = (source: Record<string, number>, ...keys: string[]): number | 
   return undefined;
 };
 
-export const pendulumPlugin: SimulationPlugin = {
-  id: 'pendulum',
+export const drivenPendulumPlugin: SimulationPlugin = {
+  id: 'driven-pendulum',
   create(context: PluginContext): ActivePlugin {
-    const defaults = DampedPendulum.getDefaultParams();
-    const model = new DampedPendulum({
+    const defaults = DrivenPendulum.getDefaultParams();
+    const model = new DrivenPendulum({
       ...defaults,
       ...context.presetValues,
       length: readValue(context.initialValues, 'length', 'l') ?? readValue(context.presetValues, 'length') ?? defaults.length,
       gravity: readValue(context.initialValues, 'gravity', 'g') ?? readValue(context.presetValues, 'gravity') ?? defaults.gravity,
       damping: readValue(context.initialValues, 'damping', 'd') ?? readValue(context.presetValues, 'damping') ?? defaults.damping,
-      mass: readValue(context.initialValues, 'mass', 'm') ?? readValue(context.presetValues, 'mass') ?? defaults.mass,
+      driveAmplitude:
+        readValue(context.initialValues, 'driveAmplitude', 'da') ??
+        readValue(context.presetValues, 'driveAmplitude') ??
+        defaults.driveAmplitude,
+      driveFrequency:
+        readValue(context.initialValues, 'driveFrequency', 'df') ??
+        readValue(context.presetValues, 'driveFrequency') ??
+        defaults.driveFrequency,
       initialAngle:
         readValue(context.initialValues, 'initialAngle', 'ia') ??
         readValue(context.presetValues, 'initialAngle') ??
@@ -40,22 +47,24 @@ export const pendulumPlugin: SimulationPlugin = {
       model.setParam('initialAngularVelocity', omega);
     }
 
-    const renderer = new PendulumCanvasRenderer(context.canvas, model);
+    const renderer = new DrivenPendulumCanvasRenderer(context.canvas, model);
 
     const redraw = () => {
       renderer.draw();
       const k = model.getKinematics();
+      context.onPendulumMotion?.(k.omega, k.theta);
       context.onStats(
         `t=${model.getTime().toFixed(2)}s | theta=${k.theta.toFixed(2)} rad`,
         `omega=${k.omega.toFixed(2)} rad/s | E=${k.total.toFixed(2)} J`,
       );
-      context.onPendulumMotion?.(k.omega, k.theta);
+
       const p = model.getParams();
       context.onStateChange({
         length: p.length,
         gravity: p.gravity,
         damping: p.damping,
-        mass: p.mass,
+        driveAmplitude: p.driveAmplitude,
+        driveFrequency: p.driveFrequency,
         initialAngle: p.initialAngle,
         initialAngularVelocity: p.initialAngularVelocity,
         theta: k.theta,
@@ -64,7 +73,7 @@ export const pendulumPlugin: SimulationPlugin = {
     };
 
     const runner = new SimulationRunner(model, redraw);
-    mountPendulumControls(context.menuRoot, model, redraw);
+    mountDrivenPendulumControls(context.menuRoot, model, redraw);
 
     const disposers: Array<() => void> = [];
     const on = (target: HTMLCanvasElement, type: string, handler: (event: PointerEvent) => void) => {
@@ -91,6 +100,7 @@ export const pendulumPlugin: SimulationPlugin = {
       const angle = Math.atan2(dx, dy);
       model.setState([angle, 0]);
       model.setParam('initialAngle', angle);
+      model.setParam('initialAngularVelocity', 0);
       redraw();
     };
 
