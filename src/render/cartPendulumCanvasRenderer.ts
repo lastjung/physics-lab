@@ -20,7 +20,7 @@ export class CartPendulumCanvasRenderer {
     const scaleX = w * 0.18;
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#f8fafc';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     ctx.strokeStyle = '#0f172a';
@@ -35,7 +35,7 @@ export class CartPendulumCanvasRenderer {
     const cartH = 38;
     const cartTop = railY - cartH * 0.5;
 
-    ctx.fillStyle = '#2563eb';
+    ctx.fillStyle = '#ef4444';
     ctx.fillRect(cartX - cartW * 0.5, cartTop, cartW, cartH);
 
     const wheelR = 10;
@@ -58,7 +58,7 @@ export class CartPendulumCanvasRenderer {
     ctx.lineTo(bobX, bobY);
     ctx.stroke();
 
-    ctx.fillStyle = '#0ea5e9';
+    ctx.fillStyle = '#f59e0b';
     ctx.beginPath();
     ctx.arc(bobX, bobY, 16, 0, Math.PI * 2);
     ctx.fill();

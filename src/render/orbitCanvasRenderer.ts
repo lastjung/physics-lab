@@ -24,13 +24,18 @@ export class OrbitCanvasRenderer {
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, w, h);
+    
+    // 외곽 보더 추가 (캔버스 자체와 구분용)
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, w, h);
 
     ctx.fillStyle = '#f59e0b';
     ctx.beginPath();
     ctx.arc(cx, cy, 16, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#22d3ee';
+    ctx.fillStyle = '#ef4444';
     ctx.beginPath();
     ctx.arc(px, py, 9, 0, Math.PI * 2);
     ctx.fill();

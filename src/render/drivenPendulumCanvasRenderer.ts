@@ -27,7 +27,7 @@ export class DrivenPendulumCanvasRenderer {
 
     ctx.clearRect(0, 0, w, h);
 
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     ctx.strokeStyle = '#0f172a';
@@ -37,7 +37,7 @@ export class DrivenPendulumCanvasRenderer {
     ctx.lineTo(bobX, bobY);
     ctx.stroke();
 
-    ctx.fillStyle = '#0369a1';
+    ctx.fillStyle = '#f59e0b';
     ctx.beginPath();
     ctx.arc(bobX, bobY, 18, 0, Math.PI * 2);
     ctx.fill();

@@ -36,7 +36,7 @@ export class CollisionLabCanvasRenderer {
     const m = this.getSceneMetrics();
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     const world = this.getWorldBounds();
@@ -47,8 +47,8 @@ export class CollisionLabCanvasRenderer {
     ctx.lineWidth = 3;
     ctx.strokeRect(topLeft.x, topLeft.y, sizeW, sizeH);
 
-    this.drawBall(b1.x, b1.y, b1.radius, '#2563eb');
-    this.drawBall(b2.x, b2.y, b2.radius, '#06b6d4');
+    this.drawBall(b1.x, b1.y, b1.radius, '#ef4444');
+    this.drawBall(b2.x, b2.y, b2.radius, '#f59e0b');
 
     ctx.fillStyle = '#1e293b';
     ctx.font = '14px "Avenir Next", sans-serif';

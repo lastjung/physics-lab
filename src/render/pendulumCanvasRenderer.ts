@@ -27,7 +27,7 @@ export class PendulumCanvasRenderer {
 
     ctx.clearRect(0, 0, w, h);
 
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     ctx.strokeStyle = '#0f172a';
@@ -37,7 +37,7 @@ export class PendulumCanvasRenderer {
     ctx.lineTo(bobX, bobY);
     ctx.stroke();
 
-    ctx.fillStyle = '#1d4ed8';
+    ctx.fillStyle = '#ef4444';
     ctx.beginPath();
     ctx.arc(bobX, bobY, 18, 0, Math.PI * 2);
     ctx.fill();

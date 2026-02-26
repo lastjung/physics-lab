@@ -9,7 +9,7 @@ export interface BilliardsBounds {
 
 export class BilliardsCanvasRenderer {
   private readonly ctx: CanvasRenderingContext2D;
-  private readonly colors = ['#ffffff', '#f59e0b', '#3b82f6', '#ef4444', '#22c55e', '#a855f7'];
+  private readonly colors = ['#ffffff', '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7'];
 
   constructor(private readonly canvas: HTMLCanvasElement, private readonly model: Billiards) {
     const ctx = canvas.getContext('2d');

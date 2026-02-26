@@ -24,7 +24,7 @@ export class SpringCanvasRenderer {
     const blockH = 62;
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     ctx.fillStyle = '#475569';
@@ -50,7 +50,7 @@ export class SpringCanvasRenderer {
 
     const left = blockCenterX - blockW / 2;
     const top = centerY - blockH / 2;
-    ctx.fillStyle = '#1d4ed8';
+    ctx.fillStyle = '#ef4444';
     ctx.fillRect(left, top, blockW, blockH);
 
     ctx.fillStyle = '#1e293b';

@@ -23,7 +23,7 @@ export class CarSuspensionCanvasRenderer {
     const m = this.getMetrics();
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#f8fafc';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     const roadY = m.baseY + k.zr * m.scale;
@@ -57,7 +57,7 @@ export class CarSuspensionCanvasRenderer {
     ctx.lineTo(m.cx, springBottom);
     ctx.stroke();
 
-    ctx.fillStyle = '#2563eb';
+    ctx.fillStyle = '#ef4444';
     ctx.fillRect(m.cx - 86, bodyY - 22, 172, 44);
     const grip = this.getGripRect();
     ctx.fillStyle = '#0f172a';

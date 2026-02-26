@@ -25,7 +25,7 @@ export class NewtonsCradleCanvasRenderer {
     const scale = this.getScale(bounds);
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#f1f5f9';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     const topLeft = this.worldToScreen(bounds.minX, bounds.maxY);

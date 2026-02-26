@@ -21,7 +21,7 @@ export class RollerCoasterTwoBallsCanvasRenderer {
     const bounds = this.getBounds();
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#effafc';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     ctx.strokeStyle = '#155e75';
@@ -46,7 +46,7 @@ export class RollerCoasterTwoBallsCanvasRenderer {
     ctx.arc(p1.x, p1.y, 13, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#2563eb';
+    ctx.fillStyle = '#f59e0b';
     ctx.beginPath();
     ctx.arc(p2.x, p2.y, 13, 0, Math.PI * 2);
     ctx.fill();

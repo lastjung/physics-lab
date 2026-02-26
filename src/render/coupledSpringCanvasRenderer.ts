@@ -29,7 +29,7 @@ export class CoupledSpringCanvasRenderer {
     const m2x = base2 + x2 * scale;
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     ctx.fillStyle = '#475569';
@@ -54,10 +54,10 @@ export class CoupledSpringCanvasRenderer {
     drawSpring(wallX, m1x - 26, 10);
     drawSpring(m1x + 26, m2x - 26, 8);
 
-    ctx.fillStyle = '#1d4ed8';
+    ctx.fillStyle = '#ef4444';
     ctx.fillRect(m1x - 26, y - 22, 52, 44);
-
-    ctx.fillStyle = '#0ea5e9';
+ 
+    ctx.fillStyle = '#f59e0b';
     ctx.fillRect(m2x - 26, y - 22, 52, 44);
 
     ctx.fillStyle = '#1e293b';

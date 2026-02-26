@@ -29,7 +29,7 @@ export class DoublePendulumCanvasRenderer {
     const p2y = originY + y2 * pxPerMeter;
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     ctx.strokeStyle = '#0f172a';
