@@ -26,6 +26,10 @@ export const collisionLabPlugin: SimulationPlugin = {
         readValue(context.initialValues, 'wallRestitution', 'we') ??
         readValue(context.presetValues, 'wallRestitution') ??
         defaults.wallRestitution,
+      linearDamping:
+        readValue(context.initialValues, 'linearDamping', 'ld') ??
+        readValue(context.presetValues, 'linearDamping') ??
+        defaults.linearDamping,
       initialX1: readValue(context.initialValues, 'initialX1', 'ix1') ?? defaults.initialX1,
       initialY1: readValue(context.initialValues, 'initialY1', 'iy1') ?? defaults.initialY1,
       initialVx1: readValue(context.initialValues, 'initialVx1', 'ivx1') ?? defaults.initialVx1,
@@ -49,14 +53,17 @@ export const collisionLabPlugin: SimulationPlugin = {
 
     const renderer = new CollisionLabCanvasRenderer(context.canvas, model);
     let lastImpactSfxAt = 0;
+    const IMPACT_TRIGGER = 0.05;
+    const IMPACT_COOLDOWN_MS = 45;
 
     const redraw = () => {
       const world = renderer.getWorldBounds();
       const impact = model.resolveCollisions(world.minX, world.maxX, world.minY, world.maxY);
-      if (impact > 0.2) {
+      if (impact > IMPACT_TRIGGER) {
         const now = performance.now();
-        if (now - lastImpactSfxAt > 80) {
-          context.onSfx('step', Math.min(1, impact / 3));
+        if (now - lastImpactSfxAt > IMPACT_COOLDOWN_MS) {
+          const intensity = Math.max(0.35, Math.min(1.6, impact * 0.9));
+          context.onSfx('step', intensity);
           lastImpactSfxAt = now;
         }
       }
@@ -75,6 +82,7 @@ export const collisionLabPlugin: SimulationPlugin = {
         mass2: p.mass2,
         restitution: p.restitution,
         wallRestitution: p.wallRestitution,
+        linearDamping: p.linearDamping,
         x1: s[0],
         y1: s[1],
         vx1: s[2],

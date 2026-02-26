@@ -2,12 +2,15 @@ import './styles.css';
 
 import { AudioEngine } from './core/audio/audioEngine';
 import { readUrlState, replaceUrlState } from './core/urlState';
+import { cartPendulumPlugin } from './plugins/CartPendulumPlugin';
 import { collisionLabPlugin } from './plugins/CollisionLabPlugin';
 import { coupledSpringPlugin } from './plugins/CoupledSpringPlugin';
 import { doublePendulumPlugin } from './plugins/DoublePendulumPlugin';
 import { drivenPendulumPlugin } from './plugins/DrivenPendulumPlugin';
+import { newtonsCradlePlugin } from './plugins/NewtonsCradlePlugin';
 import { orbitPlugin } from './plugins/OrbitPlugin';
 import { pendulumPlugin } from './plugins/PendulumPlugin';
+import { rollerCoasterPlugin } from './plugins/RollerCoasterPlugin';
 import { springMassPlugin } from './plugins/SpringMassPlugin';
 import type { ActivePlugin, SimulationPlugin } from './plugins/types';
 import { getPresetById, simulationPresets } from './simulations/registry';
@@ -58,12 +61,15 @@ const choosePreset = (presetId: string): void => {
 };
 
 const plugins: Record<string, SimulationPlugin> = {
+  [cartPendulumPlugin.id]: cartPendulumPlugin,
   [collisionLabPlugin.id]: collisionLabPlugin,
   [coupledSpringPlugin.id]: coupledSpringPlugin,
   [doublePendulumPlugin.id]: doublePendulumPlugin,
   [drivenPendulumPlugin.id]: drivenPendulumPlugin,
+  [newtonsCradlePlugin.id]: newtonsCradlePlugin,
   [orbitPlugin.id]: orbitPlugin,
   [pendulumPlugin.id]: pendulumPlugin,
+  [rollerCoasterPlugin.id]: rollerCoasterPlugin,
   [springMassPlugin.id]: springMassPlugin,
 };
 
@@ -73,6 +79,27 @@ saveRecent([activePreset.id, ...loadRecent().filter((id) => id !== activePreset.
 
 const shell = document.createElement('div');
 shell.className = 'app-shell';
+
+const createMenuSection = (titleText: string, open = true, lockOpen = false) => {
+  const section = document.createElement('section');
+  section.className = 'menu-section';
+  const details = document.createElement('details');
+  details.className = 'menu-accordion';
+  details.open = open;
+  const summary = document.createElement('summary');
+  summary.className = 'menu-summary';
+  summary.textContent = titleText;
+  const body = document.createElement('div');
+  body.className = 'menu-body';
+  details.append(summary, body);
+  if (lockOpen) {
+    details.addEventListener('toggle', () => {
+      if (!details.open) details.open = true;
+    });
+  }
+  section.append(details);
+  return { section, body };
+};
 
 const topbar = document.createElement('header');
 topbar.className = 'topbar panel';
@@ -92,14 +119,24 @@ brandStack.append(title, titleNote);
 
 const quickLibrary = document.createElement('div');
 quickLibrary.className = 'game-library';
-for (const preset of simulationPresets) {
+const quickLibraryTop = document.createElement('div');
+quickLibraryTop.className = 'game-library-row';
+const quickLibraryBottom = document.createElement('div');
+quickLibraryBottom.className = 'game-library-row';
+const quickSplit = Math.ceil(simulationPresets.length / 2);
+simulationPresets.forEach((preset, i) => {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = preset.id === activePreset.id ? 'game-btn active' : 'game-btn secondary';
   button.textContent = preset.name;
   button.addEventListener('click', () => choosePreset(preset.id));
-  quickLibrary.append(button);
-}
+  if (i < quickSplit) {
+    quickLibraryTop.append(button);
+  } else {
+    quickLibraryBottom.append(button);
+  }
+});
+quickLibrary.append(quickLibraryTop, quickLibraryBottom);
 
 const mobileMenuButton = document.createElement('button');
 mobileMenuButton.className = 'secondary mobile-menu-btn';
@@ -187,11 +224,7 @@ canvas.height = 520;
 
 stagePanel.append(librarySection, canvas);
 
-const commonMenu = document.createElement('section');
-commonMenu.className = 'menu-section';
-const commonTitle = document.createElement('h3');
-commonTitle.className = 'section-title';
-commonTitle.textContent = 'Global Controls';
+const commonMenu = createMenuSection('Global Controls', true);
 
 const controlsRow = document.createElement('div');
 controlsRow.className = 'buttons';
@@ -216,24 +249,36 @@ controlsRow.append(playPauseButton, resetButton, stepButton, stepFastButton);
 const statsEl = document.createElement('div');
 statsEl.className = 'stats';
 
-commonMenu.append(commonTitle, controlsRow, statsEl);
+commonMenu.body.append(controlsRow, statsEl);
 
-const audioMenu = document.createElement('section');
-audioMenu.className = 'menu-section';
+const audioMenu = createMenuSection('Audio', true, true);
 
-const gameMenu = document.createElement('section');
-gameMenu.className = 'menu-section';
+const gameHelpMenu = createMenuSection(`${activePreset.name} Guide`, false);
+const gameHelpText = document.createElement('div');
+gameHelpText.className = 'help-text';
+gameHelpText.textContent = activePreset.help ?? activePreset.summary;
+gameHelpMenu.body.append(gameHelpText);
 
-menuPanel.append(commonMenu, audioMenu, gameMenu);
+const gameMenu = createMenuSection('Game Controls', true);
+
+menuPanel.append(commonMenu.section, audioMenu.section, gameHelpMenu.section, gameMenu.section);
 layout.append(stagePanel, menuPanel);
 shell.append(topbar, layout);
 app.append(shell);
 
 const audio = new AudioEngine();
 const renderAudioControls = () => {
-  mountAudioControls(audioMenu, audio, renderAudioControls);
+  mountAudioControls(audioMenu.body, audio, renderAudioControls, false);
 };
 renderAudioControls();
+const unlockAudio = () => {
+  audio.ensureAudibleDefaults();
+  void audio.unlock();
+  void audio.triggerSfx('click', 0.95);
+  renderAudioControls();
+};
+window.addEventListener('pointerdown', unlockAudio, { once: true });
+window.addEventListener('keydown', unlockAudio, { once: true });
 
 let urlSyncHandle: number | null = null;
 const syncUrlState = (simId: string, values: Record<string, number>) => {
@@ -249,7 +294,7 @@ if (!plugin) throw new Error(`Plugin not registered: ${activePreset.pluginId}`);
 
 const active: ActivePlugin = plugin.create({
   canvas,
-  menuRoot: gameMenu,
+  menuRoot: gameMenu.body,
   initialValues: urlState.values,
   presetValues: activePreset.params,
   onStats: (line1, line2) => {

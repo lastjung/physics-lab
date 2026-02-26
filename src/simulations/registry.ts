@@ -1,9 +1,20 @@
 export interface SimulationPreset {
   id: string;
   name: string;
-  pluginId: 'pendulum' | 'spring-mass' | 'double-pendulum' | 'driven-pendulum' | 'coupled-spring' | 'orbit' | 'collision-lab';
+  pluginId:
+    | 'pendulum'
+    | 'spring-mass'
+    | 'double-pendulum'
+    | 'driven-pendulum'
+    | 'coupled-spring'
+    | 'orbit'
+    | 'collision-lab'
+    | 'newtons-cradle'
+    | 'cart-pendulum'
+    | 'roller-coaster';
   category: 'Oscillation' | 'Mechanics';
   summary: string;
+  help: string;
   params: Record<string, number>;
 }
 
@@ -14,6 +25,8 @@ export const simulationPresets: SimulationPreset[] = [
     pluginId: 'pendulum',
     category: 'Oscillation',
     summary: 'Dissipative pendulum with friction-like damping.',
+    help:
+      '진자 길이/중력/감쇠를 조절해 감쇠 진동을 확인합니다.\n초기 각도(또는 드래그 위치)가 클수록 큰 진폭으로 시작합니다.\nDamping을 높이면 에너지가 빠르게 줄어듭니다.',
     params: {
       damping: 0.12,
     },
@@ -24,6 +37,8 @@ export const simulationPresets: SimulationPreset[] = [
     pluginId: 'pendulum',
     category: 'Oscillation',
     summary: 'Frictionless pendulum for baseline period/energy behavior.',
+    help:
+      '이상 진자(마찰 거의 없음) 동작을 관찰합니다.\n감쇠를 0에 가깝게 두고 주기/에너지 보존 경향을 비교하기 좋습니다.\n작은 각도에서는 주기가 거의 일정합니다.',
     params: {
       damping: 0,
     },
@@ -34,6 +49,8 @@ export const simulationPresets: SimulationPreset[] = [
     pluginId: 'spring-mass',
     category: 'Mechanics',
     summary: 'Single-axis spring oscillator with tunable stiffness.',
+    help:
+      '1자유도 스프링-질량 진동입니다.\n스프링 상수(k)를 높이면 주기가 짧아지고, 질량(m)을 높이면 주기가 길어집니다.\n블록을 드래그해 초기 변위를 직접 줄 수 있습니다.',
     params: {},
   },
   {
@@ -42,6 +59,8 @@ export const simulationPresets: SimulationPreset[] = [
     pluginId: 'double-pendulum',
     category: 'Oscillation',
     summary: 'Chaotic coupled pendulum dynamics with two links.',
+    help:
+      '이중 진자의 카오스 특성을 보는 실험입니다.\n초기 각도/감쇠를 조금만 바꿔도 장기 궤적이 크게 달라질 수 있습니다.\n질량/길이 비율 조절로 모드 변화를 확인해보세요.',
     params: {
       damping: 0.02,
     },
@@ -52,6 +71,8 @@ export const simulationPresets: SimulationPreset[] = [
     pluginId: 'driven-pendulum',
     category: 'Oscillation',
     summary: 'Pendulum with periodic external forcing and tunable damping.',
+    help:
+      '외력이 걸린 진자입니다.\nDrive Amplitude/Frequency로 공진 구간을 찾을 수 있습니다.\n감쇠와 외력의 균형에 따라 안정/복잡 진동 패턴이 나타납니다.',
     params: {
       damping: 0.08,
       driveAmplitude: 0.9,
@@ -64,6 +85,8 @@ export const simulationPresets: SimulationPreset[] = [
     pluginId: 'coupled-spring',
     category: 'Mechanics',
     summary: 'Two masses coupled by springs exchanging energy over time.',
+    help:
+      '두 질량 사이 에너지 교환(비팅)을 관찰하는 모델입니다.\n질량/스프링 상수 비를 바꾸면 에너지 전달 속도와 모드가 달라집니다.\n양쪽 질량을 드래그해 초기 상태를 직접 만질 수 있습니다.',
     params: {
       damping: 0.25,
     },
@@ -74,6 +97,8 @@ export const simulationPresets: SimulationPreset[] = [
     pluginId: 'orbit',
     category: 'Mechanics',
     summary: '2D central-force orbit with adjustable gravity and damping.',
+    help:
+      '중심력 궤도(공전) 시뮬레이션입니다.\n초기 반지름과 초기 속도를 조절해 타원/원/탈출형 궤도를 비교할 수 있습니다.\nDamping을 올리면 점차 나선형으로 감쇠합니다.',
     params: {
       damping: 0.003,
       mu: 9.5,
@@ -85,9 +110,64 @@ export const simulationPresets: SimulationPreset[] = [
     pluginId: 'collision-lab',
     category: 'Mechanics',
     summary: 'Two-body collisions with wall bounce and adjustable restitution.',
+    help:
+      '2개 공의 충돌/반사 실험입니다.\n질량, 공-공 반발, 벽 반발, 공기 감쇠를 조절할 수 있습니다.\n초기 속도(Vx/Vy) 설정으로 다양한 충돌 시나리오를 만듭니다.',
     params: {
-      restitution: 0.94,
-      wallRestitution: 0.92,
+      restitution: 0.98,
+      wallRestitution: 0.97,
+      linearDamping: 0.002,
+      initialVx1: 1.5,
+      initialVy1: -0.4,
+      initialVx2: -1.2,
+      initialVy2: 0.25,
+    },
+  },
+  {
+    id: 'newtons-cradle',
+    name: "Newton's Cradle",
+    pluginId: 'newtons-cradle',
+    category: 'Mechanics',
+    summary: 'Five coupled impact balls exchanging momentum in sequence.',
+    help:
+      "뉴턴스 크래들(5구) 모멘텀 전달 실험입니다.\nStiffness는 복원력, Damping은 손실, Restitution은 충돌 탄성을 의미합니다.\n추천: Stiffness 18 / Damping 0.006 / Restitution 0.998 / Initial X1 -0.58 / Initial X5 0.\n한쪽 끝 공만 당겨 시작하면 연쇄 전달이 가장 선명합니다.",
+    params: {
+      stiffness: 18,
+      damping: 0.006,
+      restitution: 0.998,
+      spacing: 0.241,
+      initialX1: -0.58,
+      initialX5: 0,
+    },
+  },
+  {
+    id: 'cart-pendulum',
+    name: 'Cart + Pendulum',
+    pluginId: 'cart-pendulum',
+    category: 'Mechanics',
+    summary: 'Coupled nonlinear cart-pole dynamics with optional external drive.',
+    help:
+      '카트-진자 결합 시스템입니다.\n카트 위치와 진자 각도가 서로 영향을 주며 비선형 동작을 만듭니다.\nDrive를 올리면 강제 진동/불안정 구간을 관찰하기 좋습니다.',
+    params: {
+      cartSpring: 1.8,
+      driveAmplitude: 0.8,
+      driveFrequency: 1.1,
+      initialTheta: 0.45,
+    },
+  },
+  {
+    id: 'roller-coaster',
+    name: 'Roller Coaster',
+    pluginId: 'roller-coaster',
+    category: 'Mechanics',
+    summary: 'Single car constrained on a tunable track with gravity and damping.',
+    help:
+      '트랙 위 단일 카트 동역학입니다.\nTrack Amp/Freq/Tilt로 경로 형상을 바꾸고, Damping/Gravity로 감쇠와 가속을 조절합니다.\n카트를 드래그해 시작 지점을 바꿀 수 있습니다.',
+    params: {
+      trackAmplitude: 0.55,
+      trackFrequency: 1.35,
+      trackTilt: 0.05,
+      damping: 0.04,
+      initialX: -1.35,
     },
   },
 ];

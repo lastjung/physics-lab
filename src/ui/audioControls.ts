@@ -52,12 +52,9 @@ export const mountAudioControls = (
   root: HTMLElement,
   audio: AudioEngine,
   onChange?: () => void,
+  showTitle = true,
 ): void => {
   root.innerHTML = '';
-
-  const sectionTitle = document.createElement('h3');
-  sectionTitle.className = 'section-title';
-  sectionTitle.textContent = 'Audio';
 
   const controls = document.createElement('div');
   controls.className = 'controls';
@@ -110,5 +107,13 @@ export const mountAudioControls = (
     },
   );
 
-  root.append(sectionTitle, controls);
+  if (showTitle) {
+    const sectionTitle = document.createElement('h3');
+    sectionTitle.className = 'section-title';
+    sectionTitle.textContent = 'Audio';
+    root.append(sectionTitle, controls);
+    return;
+  }
+
+  root.append(controls);
 };

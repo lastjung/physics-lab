@@ -77,6 +77,9 @@ export class AudioEngine {
   private springOsc: OscillatorNode | null = null;
   private springGain: GainNode | null = null;
   private springFilter: BiquadFilterNode | null = null;
+  private readonly stepScaleHz = [523.25, 587.33, 659.25, 783.99, 880];
+  private stepScaleIndex = 0;
+  private lastStepSfxAt = 0;
 
   private readonly bgm: HTMLAudioElement;
 
@@ -134,13 +137,29 @@ export class AudioEngine {
     saveAudioSettings(this.settings);
   }
 
-  async toggleMusic(playing: boolean): Promise<void> {
+  ensureAudibleDefaults(): void {
+    const next: Partial<AudioSettings> = {};
+    if (this.settings.muteAll) next.muteAll = false;
+    if (this.settings.muteSfx) next.muteSfx = false;
+    if (this.settings.muteMusic) next.muteMusic = false;
+    if (this.settings.master < 0.2) next.master = 0.7;
+    if (this.settings.sfx < 0.2) next.sfx = 0.8;
+    if (this.settings.music < 0.1) next.music = 0.4;
+    if (Object.keys(next).length > 0) this.setSettings(next);
+  }
+
+  async unlock(): Promise<void> {
     await this.ensureGraph();
     if (!this.context) return;
-
     if (this.context.state === 'suspended') {
-      await this.context.resume();
+      await this.context.resume().catch(() => undefined);
     }
+  }
+
+  async toggleMusic(playing: boolean): Promise<void> {
+    await this.unlock();
+    if (!this.context) return;
+    if (this.context.state === 'suspended') return;
 
     if (playing) {
       await this.bgm.play().catch(() => undefined);
@@ -160,10 +179,10 @@ export class AudioEngine {
       this.whooshGain = this.context.createGain();
       this.whooshFilter = this.context.createBiquadFilter();
 
-      this.whooshOsc.type = 'sawtooth';
-      this.whooshFilter.type = 'bandpass';
-      this.whooshFilter.frequency.value = 780;
-      this.whooshFilter.Q.value = 1.2;
+      this.whooshOsc.type = 'sine';
+      this.whooshFilter.type = 'lowpass';
+      this.whooshFilter.frequency.value = 1200;
+      this.whooshFilter.Q.value = 0.65;
       this.whooshGain.gain.value = 0.0001;
 
       this.whooshOsc.connect(this.whooshFilter);
@@ -174,16 +193,16 @@ export class AudioEngine {
 
     const now = this.context.currentTime;
     const speed = Math.abs(omega);
-    const norm = clamp(speed / 4.2, 0, 1);
-    const directionShift = omega >= 0 ? 20 : -20;
+    const norm = clamp(speed / 3.6, 0, 1);
+    const directionShift = omega >= 0 ? 10 : -10;
 
-    const targetGain = this.settings.muteAll || this.settings.muteSfx ? 0.0001 : 0.065 * norm;
-    const targetFreq = 170 + norm * 440 + directionShift + Math.sin(theta) * 20;
-    const targetFilter = 620 + norm * 1400;
+    const targetGain = this.settings.muteAll || this.settings.muteSfx ? 0.0001 : 0.032 * norm;
+    const targetFreq = 230 + norm * 180 + directionShift + Math.sin(theta) * 14;
+    const targetFilter = 700 + norm * 900;
 
-    this.whooshOsc.frequency.setTargetAtTime(Math.max(80, targetFreq), now, 0.05);
-    this.whooshFilter.frequency.setTargetAtTime(Math.max(300, targetFilter), now, 0.06);
-    this.whooshGain.gain.setTargetAtTime(Math.max(0.0001, targetGain), now, 0.06);
+    this.whooshOsc.frequency.setTargetAtTime(Math.max(90, targetFreq), now, 0.08);
+    this.whooshFilter.frequency.setTargetAtTime(Math.max(320, targetFilter), now, 0.09);
+    this.whooshGain.gain.setTargetAtTime(Math.max(0.0001, targetGain), now, 0.09);
   }
 
   async setSpringMotion(velocity: number, displacement: number): Promise<void> {
@@ -226,43 +245,88 @@ export class AudioEngine {
   }
 
   async triggerSfx(type: 'click' | 'step' | 'drag-start' | 'drag-end' | 'reset' = 'click', intensity = 1): Promise<void> {
-    await this.ensureGraph();
+    await this.unlock();
     if (!this.context || !this.sfxGain) return;
     if (this.settings.muteAll || this.settings.muteSfx) return;
-
-    if (this.context.state === 'suspended') {
-      await this.context.resume();
-    }
+    if (this.context.state === 'suspended') return;
 
     const now = this.context.currentTime;
-    const gain = 0.12 * clamp(intensity, 0.2, 1.8);
+    const velocity = 0.13 * clamp(intensity, 0.2, 1.8);
 
     if (type === 'click') {
-      this.playTone(now, 880, 620, 0.035, gain * 0.65, 'square');
+      this.playPianoKey(now, 659.25, 0.2, velocity * 0.9);
       return;
     }
 
     if (type === 'step') {
-      // A short impact-like sound: low thump + bright transient.
-      this.playTone(now, 240, 120, 0.08, gain, 'triangle');
-      this.playNoise(now, 0.03, gain * 0.35, 1700);
+      // Use a 5-note pentatonic cycle to keep repeated collisions musical.
+      if (now - this.lastStepSfxAt < 0.035) return;
+      this.lastStepSfxAt = now;
+
+      const i = this.stepScaleIndex;
+      this.stepScaleIndex = (this.stepScaleIndex + 1) % this.stepScaleHz.length;
+      const base = this.stepScaleHz[i];
+      const lift = clamp(intensity, 0.2, 1.8);
+      const main = base * (lift > 1.15 ? 2 : 1);
+      const accent = this.stepScaleHz[(i + 2) % this.stepScaleHz.length] * 0.5;
+
+      this.playPianoKey(now, main, 0.24, velocity * 1.02);
+      this.playPianoKey(now + 0.032, accent, 0.2, velocity * 0.32);
       return;
     }
 
     if (type === 'drag-start') {
-      this.playTone(now, 360, 520, 0.05, gain * 0.75, 'sine');
+      this.playPianoKey(now, 493.88, 0.16, velocity * 0.7);
       return;
     }
 
     if (type === 'drag-end') {
-      this.playTone(now, 520, 320, 0.06, gain * 0.75, 'sine');
+      this.playPianoKey(now, 587.33, 0.18, velocity * 0.78);
       return;
     }
 
     // reset
-    this.playTone(now, 420, 360, 0.06, gain * 0.6, 'triangle');
-    this.playTone(now + 0.045, 360, 300, 0.06, gain * 0.55, 'triangle');
-    this.playTone(now + 0.09, 300, 220, 0.08, gain * 0.65, 'triangle');
+    this.playPianoKey(now, 523.25, 0.18, velocity * 0.62);
+    this.playPianoKey(now + 0.05, 659.25, 0.2, velocity * 0.58);
+    this.playPianoKey(now + 0.1, 783.99, 0.23, velocity * 0.66);
+  }
+
+  private playPianoKey(start: number, baseHz: number, duration: number, velocity: number): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const partials = [
+      { ratio: 1, amp: 1, type: 'triangle' as OscillatorType },
+      { ratio: 2.01, amp: 0.42, type: 'sine' as OscillatorType },
+      { ratio: 3.02, amp: 0.2, type: 'sine' as OscillatorType },
+      { ratio: 4.15, amp: 0.11, type: 'sine' as OscillatorType },
+    ];
+
+    for (const part of partials) {
+      const osc = this.context.createOscillator();
+      const env = this.context.createGain();
+      const filter = this.context.createBiquadFilter();
+      const peak = Math.max(0.0001, velocity * part.amp);
+
+      osc.type = part.type;
+      osc.frequency.setValueAtTime(Math.max(60, baseHz * part.ratio), start);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(50, baseHz * part.ratio * 0.996), start + duration);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(4200, start);
+      filter.frequency.exponentialRampToValueAtTime(1400, start + duration);
+      filter.Q.value = 0.5;
+
+      env.gain.setValueAtTime(0.0001, start);
+      env.gain.exponentialRampToValueAtTime(peak, start + 0.006);
+      env.gain.exponentialRampToValueAtTime(peak * 0.25, start + duration * 0.2);
+      env.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+      osc.connect(filter);
+      filter.connect(env);
+      env.connect(this.sfxGain);
+      osc.start(start);
+      osc.stop(start + duration + 0.02);
+    }
   }
 
   private playTone(

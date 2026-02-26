@@ -50,6 +50,50 @@ export const mountCollisionLabControls = (root: HTMLElement, model: CollisionLab
     model.setParam('mass2', v);
     onMutate();
   });
+  slider(c, 'Air Damping', 0, 0.06, 0.001, p.linearDamping, (v) => {
+    model.setParam('linearDamping', v);
+    onMutate();
+  });
+
+  const applyVelocity = (index: 1 | 2, axis: 'x' | 'y', value: number) => {
+    const s = model.getState();
+    if (index === 1) {
+      const x = s[0];
+      const y = s[1];
+      const vx = axis === 'x' ? value : s[2];
+      const vy = axis === 'y' ? value : s[3];
+      model.setBodyState(1, x, y, vx, vy);
+      model.setParam(axis === 'x' ? 'initialVx1' : 'initialVy1', value);
+      return;
+    }
+
+    const x = s[4];
+    const y = s[5];
+    const vx = axis === 'x' ? value : s[6];
+    const vy = axis === 'y' ? value : s[7];
+    model.setBodyState(2, x, y, vx, vy);
+    model.setParam(axis === 'x' ? 'initialVx2' : 'initialVy2', value);
+  };
+
+  slider(c, 'Initial Vx1', -3, 3, 0.01, p.initialVx1, (v) => {
+    applyVelocity(1, 'x', v);
+    onMutate();
+  });
+
+  slider(c, 'Initial Vy1', -3, 3, 0.01, p.initialVy1, (v) => {
+    applyVelocity(1, 'y', v);
+    onMutate();
+  });
+
+  slider(c, 'Initial Vx2', -3, 3, 0.01, p.initialVx2, (v) => {
+    applyVelocity(2, 'x', v);
+    onMutate();
+  });
+
+  slider(c, 'Initial Vy2', -3, 3, 0.01, p.initialVy2, (v) => {
+    applyVelocity(2, 'y', v);
+    onMutate();
+  });
 
   root.append(title, c);
 };

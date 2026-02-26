@@ -13,6 +13,12 @@ interface CollisionSceneMetrics {
   scale: number;
 }
 
+const WORLD_HALF_WIDTH = 2.35;
+const WORLD_HALF_HEIGHT = 1.35;
+const PADDING_X = 38;
+const PADDING_TOP = 34;
+const PADDING_BOTTOM = 64;
+
 export class CollisionLabCanvasRenderer {
   private readonly ctx: CanvasRenderingContext2D;
 
@@ -51,10 +57,10 @@ export class CollisionLabCanvasRenderer {
 
   getWorldBounds(): CollisionSceneBounds {
     return {
-      minX: -1.6,
-      maxX: 1.6,
-      minY: -1.0,
-      maxY: 1.0,
+      minX: -WORLD_HALF_WIDTH,
+      maxX: WORLD_HALF_WIDTH,
+      minY: -WORLD_HALF_HEIGHT,
+      maxY: WORLD_HALF_HEIGHT,
     };
   }
 
@@ -84,10 +90,15 @@ export class CollisionLabCanvasRenderer {
   private getSceneMetrics(): CollisionSceneMetrics {
     const w = this.canvas.width;
     const h = this.canvas.height;
+    const world = this.getWorldBounds();
+    const worldW = world.maxX - world.minX;
+    const worldH = world.maxY - world.minY;
+    const scaleX = (w - PADDING_X * 2) / worldW;
+    const scaleY = (h - PADDING_TOP - PADDING_BOTTOM) / worldH;
     return {
       centerX: w * 0.5,
-      centerY: h * 0.53,
-      scale: Math.min(w, h) * 0.24,
+      centerY: (PADDING_TOP + (h - PADDING_BOTTOM)) * 0.5,
+      scale: Math.max(1, Math.min(scaleX, scaleY)),
     };
   }
 

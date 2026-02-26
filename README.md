@@ -4,6 +4,9 @@ Expandable physics simulation sandbox inspired by myPhysicsLab.
 Current MVP includes:
 - Damped/Ideal Pendulum
 - Spring-Mass oscillator
+- Double Pendulum / Driven Pendulum / Coupled Spring
+- Orbit / Collision Lab / Newton's Cradle
+- Cart + Pendulum / Roller Coaster
 - RK4 integration, canvas rendering, interactive controls
 - AppShell architecture with global menu + per-game menu separation
 
@@ -44,12 +47,13 @@ Preview server runs on `http://localhost:4173` by default.
 - `Space`: Play/Pause toggle
 - `R`: Reset simulation
 - `.`: Step forward 1 fixed step
-- `Shift + .`: Step forward 12 fixed steps
+- `Shift + .`: Step forward 2 fixed steps
 
 ### Menu Structure
 
 - `Global Controls`: play/pause/reset/step/status (shared across all games)
 - `Per-game Controls`: only game-specific parameters (pendulum or spring)
+- `Per-game Controls`: game-specific parameters and interactions
 - On mobile, menu is collapsible via the `Menu` button
 
 ## URL State and Presets
