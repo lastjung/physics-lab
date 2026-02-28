@@ -140,6 +140,8 @@ quickLibrary.append(quickLibraryRow);
 const mobileMenuButton = document.createElement('button');
 mobileMenuButton.className = 'secondary mobile-menu-btn';
 mobileMenuButton.textContent = 'Menu';
+mobileMenuButton.setAttribute('aria-expanded', 'false');
+mobileMenuButton.setAttribute('aria-controls', 'mobile-menu-sheet');
 
 topbar.append(brandStack, mobileMenuButton);
 
@@ -154,6 +156,7 @@ const stagePanel = document.createElement('section');
 stagePanel.className = 'panel stage-panel';
 const menuPanel = document.createElement('aside');
 menuPanel.className = 'panel menu-panel';
+menuPanel.id = 'mobile-menu-sheet';
 
 const librarySection = document.createElement('section');
 librarySection.className = 'library-section';
@@ -413,10 +416,19 @@ stepFastButton.addEventListener('click', () => {
 });
 
 mobileMenuButton.addEventListener('click', () => {
-  menuPanel.classList.toggle('open');
+  const isOpen = menuPanel.classList.toggle('open');
+  mobileMenuButton.setAttribute('aria-expanded', String(isOpen));
+  mobileMenuButton.textContent = isOpen ? 'Close' : 'Menu';
 });
 
 window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && menuPanel.classList.contains('open')) {
+    menuPanel.classList.remove('open');
+    mobileMenuButton.setAttribute('aria-expanded', 'false');
+    mobileMenuButton.textContent = 'Menu';
+    return;
+  }
+
   const target = event.target as HTMLElement | null;
   if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')) return;
 

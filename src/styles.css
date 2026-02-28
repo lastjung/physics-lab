@@ -9,10 +9,20 @@
   --cta: #3B82F6;
   --danger: #EF4444;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --touch-target: 44px;
 
   font-family: 'Nunito Sans', sans-serif;
   color: var(--text);
   background-color: var(--bg);
+}
+
+button,
+summary.menu-summary,
+.mini-chip,
+.favorite-btn,
+.game-btn,
+.mobile-menu-btn {
+  min-height: var(--touch-target);
 }
 
 * {
@@ -473,11 +483,22 @@ button.secondary {
   }
 
   .menu-panel {
-    display: none;
+    display: grid;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    max-height: 78vh;
+    overflow: auto;
+    border-radius: 16px 16px 0 0;
+    transform: translateY(calc(100% + 12px));
+    transition: transform 220ms ease;
+    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.22);
   }
 
   .menu-panel.open {
-    display: grid;
+    transform: translateY(0);
   }
 }
 
