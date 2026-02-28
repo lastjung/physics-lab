@@ -9,9 +9,23 @@ export interface BodyState {
   restitution: number;
   radius: number;
   friction: number;
-  shape: 'circle' | 'aabb';
+  shape: 'circle' | 'aabb' | 'polygon';
   halfW?: number;
   halfH?: number;
+  localVertices?: { x: number; y: number }[];
+  worldVertices?: { x: number; y: number }[];
+  angle: number;
+  omega: number;
+  inertia: number;
+  invInertia: number;
+}
+
+export interface ContactPoint {
+  px: number;
+  py: number;
+  penetration: number;
+  cachedNormalImpulse: number;
+  cachedTangentImpulse: number;
 }
 
 export interface Contact {
@@ -20,8 +34,5 @@ export interface Contact {
   bId: string;
   nx: number;
   ny: number;
-  penetration: number;
-  relNormalVel: number;
-  cachedNormalImpulse?: number;
-  cachedTangentImpulse?: number;
+  points: ContactPoint[];
 }

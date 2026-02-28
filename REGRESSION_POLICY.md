@@ -19,15 +19,21 @@
 
 ## Engine2D Collision System
 
-| Component        | Logic                              | Configuration         | Note                             |
-| ---------------- | ---------------------------------- | --------------------- | -------------------------------- |
-| Pipeline         | Detect -> Resolve -> Stabilize     | 3-stage modular       | decoupled physics steps          |
-| Iterative Solver | Velocity Impulse + Baumgarte       | Default: 4 iterations | tradeoff between speed/stability |
-| Warm Starting    | Frame-to-frame impulse caching     | Default: ON           | improves stacking stability      |
-| Friction Model   | Tangential Impulse (Coulomb Clamp) | `jt <= mu * j`        | stick-slip approximation         |
-| Narrow Phase     | Circle-Circle, Circle-AABB         | SAT-based analytic    | AABB-AABB TODO                   |
+| Component | Logic | Configuration | Note |
+| Component | Logic | Configuration | Note |
+| :----------------- | :----------------------------- | :-------------------- | :------------------------------ |
+| Broad Phase | Dynamic Spatial Hashing | cellSize auto-tuning | reduction > 90% in sparse scenes|
+| Pipeline | Detect -> Resolve -> Stabilize | 3-stage modular | decoupled physics steps |
+| Velocity Loop | Sequential Impulse (Rotation) | Default: 8 iterations | v + omega x r relative velocity |
+| Position Loop | Baumgarte (Rotation) | Default: 6 iterations | resolves penetration & angle |
+| Warm Starting | Multi-point caching | Default: ON | indexed per manifold point |
+| Friction Model | Tangential Impulse | `jt <= mu * j` | applies both linear/angular |
+| Narrow Phase | Circle, AABB, Polygon SAT | SAT-based 2-point | rotation-ready contact points |
+| CCD (Continuous) | Swept Circle/AABB Slab | 0..1 TOI normalization | tunneling prevention for all |
+| Joints | Distance, Revolute | Velocity/Position solver | dynamic constraints support |
 
-- **Baumgarte Correction**: Uses `beta=0.2`, `slop=0.01`.
+- **Body State**: Requires `angle`, `omega`, `inertia`, `invInertia` for all dynamic objects.
+- **Baumgarte Correction**: Default `beta=0.18`, `slop=0.005`.
 - **Contact Management**: Sorted ID key (`aId:bId`) for persistent caching.
 - **Verification**: Pipeline tests must maintain 0 NaN/Infinity and correct velocity exchange for elastic cases.
 
