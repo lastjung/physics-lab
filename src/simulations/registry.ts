@@ -14,7 +14,10 @@ export interface SimulationPreset {
     | 'newtons-cradle'
     | 'cart-pendulum'
     | 'roller-coaster'
-    | 'roller-coaster-two-balls';
+    | 'roller-coaster-two-balls'
+    | 'pile-attract'
+    | 'hanging-chain'
+    | 'double-pendulum-compare';
   category: 'Oscillation' | 'Mechanics';
   summary: string;
   help: string;
@@ -224,6 +227,52 @@ export const simulationPresets: SimulationPreset[] = [
       roadFrequency: 1.4,
       gripOffsetX: 0,
       gripOffsetY: -22,
+    },
+  },
+  {
+    id: 'hanging-chain',
+    name: 'Hanging Chain',
+    pluginId: 'hanging-chain',
+    category: 'Mechanics',
+    summary: 'Multi-node chain linked by distance joints with gravity.',
+    help:
+      '거리가 고정된 여러 노드가 연결된 사슬 시뮬레이션입니다.\nDistance Joint 기능을 활용해 충돌과 제약 조건의 상호작용을 확인합니다.\n노드를 드래그하여 잡아당길 수 있으며, 바닥면과의 충돌도 지원합니다.',
+    params: {
+      segments: 12,
+      linkLength: 0.15,
+      gravity: 9.8,
+      stiffness: 0.2,
+    },
+  },
+  {
+    id: 'pile-attract',
+    name: 'Pile Attract',
+    pluginId: 'pile-attract',
+    category: 'Mechanics',
+    summary: 'Dozens of particles attracted to a central point with collisions.',
+    help:
+      '중심 attractor로 끌려오는 수십 개의 유색 파티클을 관찰합니다.\n파티클 간의 충돌과 감쇠를 통해 더미(Pile)를 형성하는 과정을 볼 수 있습니다.\n마우스/터치로 attractor의 위치를 이동시켜 파티클들을 유도할 수 있습니다.\n공전처럼 돌리고 싶다면: Damping을 낮추고(0에 가깝게), 파티클을 중심에서 떨어뜨린 뒤 반지름 방향이 아닌 옆 방향(접선) 속도를 주면 원/타원 궤도에 가깝게 움직입니다.',
+    params: {
+      particleCount: 80,
+      attractStrength: 1.8,
+      damping: 0.12,
+      restitution: 0.4,
+    },
+  },
+  {
+    id: 'chaos-compare',
+    name: 'Chaos: Double Pendulum',
+    pluginId: 'double-pendulum-compare',
+    category: 'Oscillation',
+    summary: 'Two double pendulums with tiny initial difference to visualize chaos.',
+    help:
+      '거의 동일한 초기 조건(ε 차이)을 가진 두 개의 이중 진자를 동시에 실행하여 카오스 이론의 비선형성을 관찰합니다.\n시간이 지남에 따라 두 상태의 거리(Phase Distance)가 지수적으로 증가하는 것을 확인할 수 있습니다.\nLyapunov 지수 근사치를 통해 시스템의 민감도를 수치화합니다.',
+    params: {
+      l1: 1.0,
+      l2: 0.8,
+      epsilon: 1e-4,
+      damping: 0.01,
+      initialTheta1: 2.1,
     },
   },
 ];

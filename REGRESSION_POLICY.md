@@ -39,8 +39,14 @@
 
 ## Execution
 
-모든 회귀 테스트는 아래 명령으로 실행할 수 있습니다:
+모든 회귀 테스트(**총 73개**)는 아래 명령으로 실행할 수 있습니다:
 
 ```bash
 pnpm test
 ```
+
+## Phase 3.5 Verification Notes
+
+- **Hanging Chain**: 300스텝 후 앵커 위치 고정 및 전체 상태 유한성 검사 완료.
+- **Pile Attract**: 인력에 의한 평균 반경 감소 경향성 및 입자 간 중점 방지 검사 완료.
+- **Chaos Compare**: Epsilon 오차에 따른 위상 공간 거리의 지수적 발산(Lyapunov > 0) 수치 검증 완료.

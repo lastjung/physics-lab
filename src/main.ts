@@ -3,6 +3,9 @@ import './styles.css';
 import { AudioEngine } from './core/audio/audioEngine';
 import { readUrlState, replaceUrlState } from './core/urlState';
 import { billiardsPlugin } from './plugins/BilliardsPlugin';
+import { hangingChainPlugin } from './plugins/HangingChainPlugin';
+import { pileAttractPlugin } from './plugins/PileAttractPlugin';
+import { doublePendulumComparePlugin } from './plugins/DoublePendulumComparePlugin';
 import { carSuspensionPlugin } from './plugins/CarSuspensionPlugin';
 import { cartPendulumPlugin } from './plugins/CartPendulumPlugin';
 import { collisionLabPlugin } from './plugins/CollisionLabPlugin';
@@ -77,6 +80,9 @@ const plugins: Record<string, SimulationPlugin> = {
   [rollerCoasterPlugin.id]: rollerCoasterPlugin,
   [rollerCoasterTwoBallsPlugin.id]: rollerCoasterTwoBallsPlugin,
   [springMassPlugin.id]: springMassPlugin,
+  [hangingChainPlugin.id]: hangingChainPlugin,
+  [pileAttractPlugin.id]: pileAttractPlugin,
+  [doublePendulumComparePlugin.id]: doublePendulumComparePlugin,
 };
 
 const urlState = readUrlState();
@@ -289,11 +295,15 @@ const audio = new AudioEngine();
 let soundEnabled = false;
 let playOnlySound = true;
 const resolveSfxProfile = (): 'default' | 'pendulum' | 'collision' | 'cradle' | 'coaster' => {
-  if (activePreset.id === 'collision-lab' || activePreset.id === 'billiards') return 'collision';
+  if (activePreset.id === 'collision-lab' || activePreset.id === 'billiards' || activePreset.id === 'pile-attract' || activePreset.id === 'hanging-chain') return 'collision';
   if (activePreset.id === 'newtons-cradle') return 'cradle';
-  if (activePreset.id === 'roller-coaster') return 'coaster';
-  if (activePreset.id === 'roller-coaster-two-balls') return 'coaster';
-  if (activePreset.pluginId === 'pendulum' || activePreset.pluginId === 'double-pendulum' || activePreset.pluginId === 'driven-pendulum') {
+  if (activePreset.id === 'roller-coaster' || activePreset.id === 'roller-coaster-two-balls') return 'coaster';
+  if (
+    activePreset.pluginId === 'pendulum' || 
+    activePreset.pluginId === 'double-pendulum' || 
+    activePreset.pluginId === 'driven-pendulum' ||
+    activePreset.pluginId === 'double-pendulum-compare'
+  ) {
     return 'pendulum';
   }
   return 'default';

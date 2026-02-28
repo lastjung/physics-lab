@@ -2,12 +2,15 @@
 
 Expandable physics simulation sandbox inspired by myPhysicsLab.
 Current MVP includes:
+
 - Damped/Ideal Pendulum
 - Spring-Mass oscillator
 - Double Pendulum / Driven Pendulum / Coupled Spring
 - Orbit / Collision Lab / Newton's Cradle
 - Cart + Pendulum / Roller Coaster
-- RK4 integration, canvas rendering, interactive controls
+- **Hanging Chain** / **Pile Attract** (Phase 3.5)
+- **Chaos: Double Pendulum Comparison** (Phase 3.5)
+- RK4 integration, 2D Collision Engine (SAT, CCD, Spatial Hashing)
 - AppShell architecture with global menu + per-game menu separation
 
 ## Requirements

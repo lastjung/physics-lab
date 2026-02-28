@@ -85,4 +85,16 @@ export const pluginMetadata: Record<string, Record<string, ParameterMetadata>> =
     friction: { label: 'Track Friction', min: 0.0, max: 0.5, step: 0.01 },
     e: { label: 'Collision Bounciness', min: 0.5, max: 1.0, step: 0.05 },
   },
+  'hanging-chain': {
+    stiffness: { label: 'Stiffness (Beta)', min: 0.01, max: 1.0, step: 0.01 },
+  },
+  'pile-attract': {
+    restitution: { label: 'Restitution', min: 0.0, max: 1.0, step: 0.05 },
+  },
+  'double-pendulum-compare': {
+    epsilon: { label: 'Initial Offset (ε)', min: 1e-10, max: 1e-1, step: 1e-10 },
+    l1: { label: 'Link 1 Length', min: 0.5, max: 2.0, step: 0.1 },
+    l2: { label: 'Link 2 Length', min: 0.5, max: 2.0, step: 0.1 },
+    damping: { label: 'Damping', min: 0.0, max: 0.2, step: 0.005 },
+  },
 };
