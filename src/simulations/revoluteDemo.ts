@@ -12,21 +12,23 @@ export interface RevoluteDemoParams {
   upperAngle: number;
   gravity: number;
   damping: number;
+  armLength: number;
 }
 
 const defaults: RevoluteDemoParams = {
   motorEnabled: true,
   motorSpeed: 2.0,
-  maxMotorTorque: 50.0,
+  maxMotorTorque: 100.0,
   limitEnabled: false,
   lowerAngle: -Math.PI / 4,
   upperAngle: Math.PI / 4,
   gravity: 9.8,
-  damping: 0.1
+  damping: 0.005,
+  armLength: 0.4
 };
 
 export class RevoluteDemo implements SimulationModel {
-  private state: StateVector = [0, 0, 0, 0, 0, 0]; // [x, y, vx, vy, angle, omega]
+  private state: StateVector = [0.4, 0, 0, 0, 0, 0]; // [x, y, vx, vy, angle, omega]
   private time = 0;
   private params: RevoluteDemoParams;
   private joints: Joint[] = [];
@@ -52,30 +54,36 @@ export class RevoluteDemo implements SimulationModel {
     const out = new Array(state.length).fill(0);
     const g = this.params.gravity;
     const d = this.params.damping;
+    const L = this.params.armLength;
+    const theta = state[4];
+    const omega = state[5];
 
-    // x, y derivatives
-    out[0] = state[2];
-    out[1] = state[3];
+    // 1. Angular acceleration (alpha) from gravity torque
+    // Alpha = (g * cos(theta)) / L
+    const alpha = (g * Math.cos(theta)) / L - d * omega;
 
-    // vx, vy (gravity + damping)
-    out[2] = -d * state[2];
-    out[3] = g - d * state[3];
-
-    // angle derivative
-    out[4] = state[5];
+    // 2. Kinematic derivatives
+    // dx/dt = vx
+    out[0] = -L * omega * Math.sin(theta);
+    // dy/dt = vy
+    out[1] = L * omega * Math.cos(theta);
     
-    // omega derivative (gravity torque + damping)
-    // For a simple pendulum-like arm, torque = -m * g * L * sin(theta)
-    // But we let the joint solver handle the constraint forces.
-    out[5] = -d * state[5];
+    // dvx/dt = ax = -L * alpha * sin(theta) - L * omega^2 * cos(theta)
+    out[2] = -L * alpha * Math.sin(theta) - L * omega * omega * Math.cos(theta);
+    // dvy/dt = ay = L * alpha * cos(theta) - L * omega^2 * sin(theta)
+    out[3] = L * alpha * Math.cos(theta) - L * omega * omega * Math.sin(theta);
+
+    // dtheta/dt = omega
+    out[4] = omega;
+    // domega/dt = alpha
+    out[5] = alpha;
 
     return out;
   }
 
   reset(): void {
-    // Arm at (0, 0.4) initially, fixed base at (0, 0)
-    // Body state: [x, y, vx, vy, angle, omega]
-    this.state = [0.4, 0, 0, 0, 0, 0];
+    const L = this.params.armLength;
+    this.state = [L, 0, 0, 0, 0, 0];
     this.time = 0;
     this.updateJoints();
   }
@@ -88,7 +96,7 @@ export class RevoluteDemo implements SimulationModel {
         bodyIdA: 'base',
         bodyIdB: 'arm',
         localAnchorA: { x: 0, y: 0 },
-        localAnchorB: { x: -0.4, y: 0 },
+        localAnchorB: { x: -this.params.armLength, y: 0 },
         motorEnabled: this.params.motorEnabled,
         motorSpeed: this.params.motorSpeed,
         maxMotorTorque: this.params.maxMotorTorque,
@@ -127,8 +135,8 @@ export class RevoluteDemo implements SimulationModel {
         mass: 1, invMass: 1,
         restitution: 0.5, radius: 0.05, friction: 0.3, shape: 'circle',
         angle: this.state[4], omega: this.state[5],
-        inertia: 0.5 * 1 * 0.16, // approximate
-        invInertia: 1 / (0.5 * 1 * 0.16)
+        inertia: (this.params.armLength ** 2), 
+        invInertia: 1 / (this.params.armLength ** 2)
       }
     ];
 
@@ -152,9 +160,6 @@ export class RevoluteDemo implements SimulationModel {
   }
 
   getJointState() {
-      const joint = this.joints[0] as RevoluteJoint;
-      // relAngle = (angleB - angleA) - ref
-      // Since angleA is 0 and ref is 0
       return {
           angle: this.state[4],
           speed: this.state[5]

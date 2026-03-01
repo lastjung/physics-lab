@@ -75,9 +75,24 @@ export const sceneEditorPlugin: SimulationPlugin = {
 
     const updateUI = () => {
         const menu = context.menuRoot;
+        const currentParams = model.getParams();
         menu.innerHTML = `
           <div class="menu-section">
             <h3 class="section-title">Scene Editor</h3>
+            
+            <div style="background: rgba(0,0,0,0.04); padding: 10px; border-radius: 6px; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-weight: 600; font-size: 0.8rem; color: #475569;">Environment</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem;">
+                    <span style="color: #64748b;">Gravity:</span>
+                    <input type="number" step="0.5" id="global-gravity" 
+                        style="width: 70px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 0.9rem;" 
+                        value="${currentParams.gravity}">
+                    <span style="color: #94a3b8; font-size: 0.75rem;">m/s²</span>
+                </div>
+            </div>
+
             <div class="controls" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
               <button id="add-circle" class="game-btn active">+ Circle</button>
               <button id="add-box" class="game-btn active">+ Box</button>
@@ -93,10 +108,16 @@ export const sceneEditorPlugin: SimulationPlugin = {
             ${renderPropsPanel()}
           </div>
           <div class="help-text">
-            ${jointMode ? `Joint mode: Click two bodies to link.` : `Click select, Drag move.`}
+            ${jointMode ? `Joint mode: Click two bodies to link.` : `Mode: Selection & Dragging.`}
           </div>
         `;
 
+        // Bind global events
+        const gravInput = menu.querySelector('#global-gravity') as HTMLInputElement;
+        gravInput?.addEventListener('input', (e: any) => {
+            model.setParam('gravity', Number(e.target.value));
+            saveScene();
+        });
         menu.querySelector('#add-circle')?.addEventListener('click', () => { model.addCircle(0, -1.0, 0.15); saveScene(); redraw(); });
         menu.querySelector('#add-box')?.addEventListener('click', () => { model.addBox(0, -1.0, 0.3, 0.2); saveScene(); redraw(); });
         menu.querySelector('#mode-rev')?.addEventListener('click', () => { jointMode = (jointMode === 'revolute' ? null : 'revolute'); pendingBodyA = null; updateUI(); });

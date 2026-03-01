@@ -64,12 +64,26 @@ export const revoluteDemoPlugin: SimulationPlugin = {
       const wp = renderer.screenToWorld(cp.x, cp.y);
       
       const angle = Math.atan2(wp.y, wp.x);
-      const L = 0.4; // Arm length
-      const x = L * Math.cos(angle);
-      const y = L * Math.sin(angle);
+      // Allow arm to grow based on grab distance
+      const dist = Math.hypot(wp.x, wp.y);
+      const newL = Math.max(0.1, Math.min(1.0, dist));
+      
+      model.setParam('armLength', newL);
+      
+      const x = newL * Math.cos(angle);
+      const y = newL * Math.sin(angle);
       
       // Update state: [x, y, vx, vy, angle, omega]
       model.setState([x, y, 0, 0, angle, 0]);
+      
+      // Sync UI sliders
+      if (uiControls && (uiControls as any).refresh) {
+          (uiControls as any).refresh();
+      } else {
+          // Fallback: Re-mount sliders if no refresh method
+          mountRevoluteDemoControls(context.menuRoot, model, redraw);
+      }
+
       redraw();
     };
 

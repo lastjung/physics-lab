@@ -36,15 +36,17 @@ export class RevoluteDemoCanvasRenderer {
     const y = state[1];
     const angle = state[4];
 
+    const params = this.model.getParams();
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
     
     // Draw the arm bar
     ctx.beginPath();
-    ctx.moveTo(-0.4, 0);
+    ctx.moveTo(-params.armLength, 0);
     ctx.lineTo(0, 0);
     ctx.strokeStyle = '#3498db';
+    ctx.lineWidth = 0.03;
     ctx.stroke();
 
     // Draw the mass at the end
@@ -56,14 +58,13 @@ export class RevoluteDemoCanvasRenderer {
     ctx.restore();
 
     // Draw the limits if enabled
-    const params = this.model.getParams();
     if (params.limitEnabled) {
         ctx.save();
         ctx.globalAlpha = 0.2;
         ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.arc(0, 0, 0.45, params.lowerAngle, params.upperAngle);
+        ctx.arc(0, 0, params.armLength + 0.05, params.lowerAngle, params.upperAngle);
         ctx.closePath();
         ctx.fill();
         ctx.restore();

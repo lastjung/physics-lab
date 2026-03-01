@@ -101,6 +101,22 @@ export function mountRevoluteDemoControls(
     onUpdate();
   }, true);
 
+  const hr2 = document.createElement('hr');
+  hr2.style.border = '0';
+  hr2.style.borderTop = '1px solid var(--panel-border)';
+  hr2.style.margin = '8px 0';
+  controls.append(hr2);
+
+  createSlider(controls, 'Arm Length', 'armLength', 0.1, 0.8, 0.05, p.armLength, (v) => {
+    model.setParam('armLength', v);
+    onUpdate();
+  });
+
+  createSlider(controls, 'Gravity', 'gravity', 0, 50, 0.1, p.gravity, (v) => {
+    model.setParam('gravity', v);
+    onUpdate();
+  });
+
   const stats = document.createElement('div');
   stats.className = 'stats';
   stats.id = 'stat-angle';
@@ -117,6 +133,33 @@ export function mountRevoluteDemoControls(
       if (el) {
         el.innerText = `Current Angle: ${s.angle.toFixed(2)} rad (${(s.angle * 180 / Math.PI).toFixed(1)}°)`;
       }
+    },
+    refresh: () => {
+      const np = model.getParams();
+      const fields = [
+        { id: 'motorEnabled', type: 'checkbox', value: np.motorEnabled },
+        { id: 'motorSpeed', type: 'range', value: np.motorSpeed },
+        { id: 'maxTorque', type: 'range', value: np.maxMotorTorque },
+        { id: 'limitEnabled', type: 'checkbox', value: np.limitEnabled },
+        { id: 'lowerAngle', type: 'range', value: np.lowerAngle * 180 / Math.PI, isAngle: true },
+        { id: 'upperAngle', type: 'range', value: np.upperAngle * 180 / Math.PI, isAngle: true },
+        { id: 'armLength', type: 'range', value: np.armLength },
+        { id: 'gravity', type: 'range', value: np.gravity }
+      ];
+
+      fields.forEach(f => {
+        const input = root.querySelector(`#${f.id}`) as HTMLInputElement;
+        if (input) {
+          if (f.type === 'checkbox') input.checked = f.value as boolean;
+          else {
+            input.value = String(f.value);
+            const valDisplay = root.querySelector(`#v_${f.id}`) as HTMLElement;
+            if (valDisplay) {
+              valDisplay.textContent = f.isAngle ? `${(f.value as number).toFixed(0)}°` : (f.value as number).toFixed(1);
+            }
+          }
+        }
+      });
     }
   };
 }

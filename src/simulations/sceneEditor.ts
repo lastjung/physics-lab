@@ -285,9 +285,11 @@ export class SceneEditorSimulation implements SimulationModel {
               mass: b.mass,
               invMass: b.invMass,
               inertia: b.inertia,
-              invInertia: b.invInertia
+              invInertia: b.invInertia,
+              friction: b.friction
           })),
-          joints: this.joints.map(j => ({ ...j }))
+          joints: this.joints.map(j => ({ ...j })),
+          params: { ...this.params }
       };
       return JSON.stringify(sceneData);
   }
@@ -312,6 +314,9 @@ export class SceneEditorSimulation implements SimulationModel {
           }
           if (data.joints) {
               this.joints = data.joints;
+          }
+          if (data.params) {
+              this.params = { ...this.params, ...data.params };
           }
       } catch (e) {
           console.error('Failed to deserialize scene:', e);

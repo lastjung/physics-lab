@@ -53,8 +53,12 @@ export function solveRevoluteVelocity(
     const relOmega = bodyB.omega - bodyA.omega;
     let lambda = -(relOmega - target) / invAngularMass;
 
+    // Allow freewheeling: Don't brake if we are already faster than target in the same direction
+    if (target > 0 && relOmega > target) lambda = 0;
+    if (target < 0 && relOmega < target) lambda = 0;
+
     const maxMotorTorque = Math.max(0, joint.maxMotorTorque ?? 0);
-    if (maxMotorTorque > 0) {
+    if (maxMotorTorque > 0 && lambda !== 0) {
       const maxMotorImpulse = maxMotorTorque * dt;
       lambda = Math.max(-maxMotorImpulse, Math.min(maxMotorImpulse, lambda));
     }
