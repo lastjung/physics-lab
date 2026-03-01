@@ -19,6 +19,7 @@ import { rollerCoasterPlugin } from './plugins/RollerCoasterPlugin';
 import { rollerCoasterTwoBallsPlugin } from './plugins/RollerCoasterTwoBallsPlugin';
 import { springMassPlugin } from './plugins/SpringMassPlugin';
 import { revoluteDemoPlugin } from './plugins/RevoluteDemoPlugin';
+import { sceneEditorPlugin } from './plugins/SceneEditorPlugin';
 import type { ActivePlugin, SimulationPlugin } from './plugins/types';
 import { getPresetById, simulationPresets } from './simulations/registry';
 import { mountAudioControls } from './ui/audioControls';
@@ -85,6 +86,7 @@ const plugins: Record<string, SimulationPlugin> = {
   [pileAttractPlugin.id]: pileAttractPlugin,
   [doublePendulumComparePlugin.id]: doublePendulumComparePlugin,
   [revoluteDemoPlugin.id]: revoluteDemoPlugin,
+  [sceneEditorPlugin.id]: sceneEditorPlugin,
 };
 
 const urlState = readUrlState();
@@ -263,18 +265,26 @@ controlsRow.className = 'buttons';
 
 const playPauseButton = document.createElement('button');
 playPauseButton.textContent = 'Play';
+playPauseButton.setAttribute('aria-label', 'Toggle simulation playback');
+playPauseButton.title = 'Play/Pause (Space)';
 
 const resetButton = document.createElement('button');
 resetButton.className = 'secondary';
 resetButton.textContent = 'Reset';
+resetButton.setAttribute('aria-label', 'Reset simulation to initial state');
+resetButton.title = 'Reset (R)';
 
 const stepButton = document.createElement('button');
 stepButton.className = 'secondary';
 stepButton.textContent = 'Step';
+stepButton.setAttribute('aria-label', 'Advance simulation by one frame');
+stepButton.title = 'Step (.)';
 
 const stepFastButton = document.createElement('button');
 stepFastButton.className = 'secondary';
 stepFastButton.textContent = 'x2';
+stepFastButton.setAttribute('aria-label', 'Fast forward simulation');
+stepFastButton.title = 'Step x12 (Shift + .)';
 
 controlsRow.append(playPauseButton, resetButton, stepButton, stepFastButton);
 

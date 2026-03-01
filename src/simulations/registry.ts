@@ -18,7 +18,8 @@ export interface SimulationPreset {
     | 'pile-attract'
     | 'hanging-chain'
     | 'double-pendulum-compare'
-    | 'revolute-demo';
+    | 'revolute-demo'
+    | 'scene-editor';
   category: 'Oscillation' | 'Mechanics';
   summary: string;
   help: string;
@@ -289,6 +290,17 @@ export const simulationPresets: SimulationPreset[] = [
       limitEnabled: 0,
       lowerAngle: -0.7853981633974483,
       upperAngle: 0.7853981633974483
+    },
+  },
+  {
+    id: 'scene-editor',
+    pluginId: 'scene-editor',
+    name: 'Scene Editor (Phase 4)',
+    category: 'Mechanics',
+    summary: 'Build and edit physics scenes dynamicly.',
+    help: 'Drop objects and create joints in real-time. (Scaffold version)',
+    params: {
+      gravity: 9.8,
     },
   },
 ];

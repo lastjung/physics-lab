@@ -66,6 +66,90 @@
 - DoD: 극단 질량비/고속 입력 조건 테스트 2개 이상 추가 + `pnpm test` PASS
 - 산출물: 테스트 파일 diff + 실패 재현 조건(있다면) 기록
 
+### Cycle-3: 다음 오더
+
+1. [DONE] 문서 수치 최종 정합화
+
+- DoD: `QA_SMOKE_CHECKLIST.md`, `PHASE3_5_RELEASE_NOTES.md`, `PROJECT_PLAN.md`의 테스트/상태 수치가 현재 실행 결과와 완전히 일치
+- 산출물: 문서 3개 diff 요약
+
+2. [DONE] Scene Editor Phase-4 스캐폴드 착수
+
+- DoD: 최소 기능(객체 선택 or Circle 생성) 1개를 `src/plugins`/`src/simulations`에 연결해 실행 가능 상태
+- 산출물: 신규 파일 + 프리셋 등록 + 실행 방법 3줄
+
+3. [DONE] Phase-4 회귀 테스트 베이스라인 추가
+
+- DoD: Scene Editor/신규 메커니즘용 스모크 테스트 2개 이상 추가, 기존 테스트 포함 전체 PASS
+- 산출물: 테스트 파일 diff + 테스트 명세 요약
+
+4. [DONE] UI 접근성 1차 점검
+
+- DoD: 키보드 포커스/버튼 라벨/모바일 메뉴 접근성 최소 3개 항목 점검 및 수정
+- 산출물: 수정 파일 목록 + 점검 항목 체크리스트
+
+### Cycle-4: 대량 백로그 오더 (연속 수행)
+
+1. [OPEN] Scene Editor 선택/생성 1차 완성
+
+- DoD: Circle/Box 생성 + 선택 + 이동(드래그)까지 동작, 프리셋에서 실행 가능
+- 산출물: 신규 시뮬레이션/플러그인 파일 + 실행 절차
+
+2. [OPEN] Scene 저장/불러오기(localStorage)
+
+- DoD: 현재 장면을 저장 후 새로고침해도 복원
+- 산출물: JSON 스키마 + 저장/로드 코드 + 실패 케이스 1개 대응
+
+3. [OPEN] Scene 파일 Import/Export
+
+- DoD: JSON 다운로드/업로드 가능, 잘못된 JSON 입력 시 에러 처리
+- 산출물: UI 버튼 + 파서/검증 로직
+
+4. [OPEN] Joint 에디터 UI
+
+- DoD: Revolute/Prismatic 생성 및 핵심 파라미터 편집 가능
+- 산출물: 조인트 생성/편집 패널 + 상태 반영 코드
+
+5. [OPEN] Wheel Joint 초안 구현
+
+- DoD: Prismatic + spring/damper 조합으로 2륜 데모 동작
+- 산출물: `solveWheelJoint`(또는 동등 구조) + 데모 프리셋
+
+6. [OPEN] Weld Joint 구현
+
+- DoD: 2개 바디를 강체처럼 고정, 분리/흔들림 최소화
+- 산출물: 솔버 + 회귀 테스트 2개 이상
+
+7. [OPEN] Polygon CCD 조사 및 스캐폴드
+
+- DoD: 최소 TOI 계산 경로 1개 추가, 실패 케이스 문서화
+- 산출물: 코드 초안 + 리스크 메모
+
+8. [OPEN] Physics Sub-stepping 옵션화
+
+- DoD: 스텝 분할(예: 1/2/4) 선택 가능, 고속 충돌 안정성 비교 가능
+- 산출물: 옵션 파라미터 + 비교 결과 기록
+
+9. [OPEN] 모바일 UX 2차 마감
+
+- DoD: 바텀시트/오버레이/버튼 터치 영역 최적화, 390x844/430x932 확인
+- 산출물: 체크리스트 + 수정 파일
+
+10. [OPEN] 접근성 2차 점검
+
+- DoD: keyboard-only 조작 경로 보장, aria-label 누락 0건
+- 산출물: 점검표 + 수정 파일
+
+11. [OPEN] 테스트 인프라 정리
+
+- DoD: 조인트 테스트를 파일 분리(기능군별), 공통 fixture 정리
+- 산출물: 테스트 구조 리팩터링 + 전체 PASS
+
+12. [OPEN] 문서/릴리즈 정리
+
+- DoD: `PROJECT_PLAN.md`, `PHASE3_5_RELEASE_NOTES.md`, `QA_SMOKE_CHECKLIST.md` 최신 상태 동기화
+- 산출물: 문서 diff + 변경 요약 10줄 이내
+
 ## 금지
 
 - "내가 감독" 식으로 범위/우선순위 임의 변경 금지
@@ -73,6 +157,6 @@
 
 ## AI 전용 섹션 (재민 수정 금지)
 
-- 마지막 검증 시각: 2026-03-01 (pnpm test 87 PASS / pnpm build SUCCESS)
-- 마지막 판정: Cycle-2 DONE
-- 다음 오더 발행 시각: (Cycle-3 대기 중)
+- 마지막 검증 시각: 2026-03-01 (pnpm test 91 PASS / pnpm build SUCCESS)
+- 마지막 판정: Cycle-3 DONE (Phase 4 킥오프 완료)
+- 다음 오더 발행 시각: (Cycle-4 대기 중)
