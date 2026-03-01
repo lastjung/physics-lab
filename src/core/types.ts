@@ -7,4 +7,5 @@ export interface SimulationModel {
   reset(): void;
   getTime(): number;
   setTime(time: number): void;
+  step?(dt: number): void;
 }

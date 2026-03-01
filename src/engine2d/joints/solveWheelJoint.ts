@@ -22,8 +22,7 @@ export function solveWheelVelocity(
   const imA = bodyA.invMass, imB = bodyB.invMass;
   const iiA = bodyA.invInertia, iiB = bodyB.invInertia;
 
-  // Helper to get relative velocity at anchors
-  const getRelVel = () => {
+  const getRelV = () => {
     const vax = bodyA.vx + (-bodyA.omega * raY);
     const vay = bodyA.vy + (bodyA.omega * raX);
     const vbx = bodyB.vx + (-bodyB.omega * rbY);
@@ -31,14 +30,14 @@ export function solveWheelVelocity(
     return { x: vbx - vax, y: vby - vay };
   };
 
-  // 1. Perpendicular linear constraint (Hard)
+  // 1. Perpendicular Constraint (Hard)
   {
     const crossA = raX * perpY - raY * perpX;
     const crossB = rbX * perpY - rbY * perpX;
     const K = imA + imB + crossA * crossA * iiA + crossB * crossB * iiB;
 
     if (K > 1e-12) {
-      const relV = getRelVel();
+      const relV = getRelV();
       const vn = relV.x * perpX + relV.y * perpY;
       const lambda = -vn / K;
       const ix = lambda * perpX, iy = lambda * perpY;
@@ -46,14 +45,15 @@ export function solveWheelVelocity(
       bodyA.vx -= ix * imA;
       bodyA.vy -= iy * imA;
       bodyA.omega -= crossA * lambda * iiA;
-
       bodyB.vx += ix * imB;
       bodyB.vy += iy * imB;
       bodyB.omega += crossB * lambda * iiB;
     }
   }
 
-  // 2. Suspension Spring/Damper (Along Axis) - Soft Constraint approach
+  // 2. Suspension (Along Axis) - Soft Constraint using frequency and damping ratio
+  // For WheelJoint, we often use stiffness/damping directly.
+  // Converting stiffness/damping to Box2D soft constraint parameters:
   if (joint.stiffness && joint.stiffness > 0) {
     const crossA = raX * axisY - raY * axisX;
     const crossB = rbX * axisY - rbY * axisX;
@@ -64,14 +64,23 @@ export function solveWheelVelocity(
       const dY = (bodyB.y + rbY) - (bodyA.y + raY);
       const translation = dX * axisX + dY * axisY;
 
-      const relV = getRelVel();
+      const relV = getRelV();
       const speed = relV.x * axisX + relV.y * axisY;
 
-      // Force = -stiffness * translation - damping * speed
+      // Stable Soft Constraint Formula
+      // h = dt
+      // frequency = h * stiffness, damping = h * damping
+      // gamma = 1 / (h * (damping + h * stiffness))
+      // beta = (h * h * stiffness) * gamma
+      
       const stiffness = joint.stiffness;
       const damping = joint.damping ?? 0;
       
-      const impulse = (-stiffness * translation - damping * speed) * dt;
+      const gamma = 1.0 / (dt * (damping + dt * stiffness));
+      const beta = dt * stiffness * gamma;
+
+      // Notice: impulse = -(speed + beta * C) / (K + gamma)
+      const impulse = -(speed + beta * translation) / (K + gamma);
       
       const ix = impulse * axisX, iy = impulse * axisY;
       bodyA.vx -= ix * imA;
@@ -84,18 +93,17 @@ export function solveWheelVelocity(
     }
   }
 
-  // 3. Angular Motor
+  // 3. Motor (Angular)
   if (joint.motorEnabled) {
     const invAngularMass = iiA + iiB;
     if (invAngularMass > 1e-12) {
-      const target = joint.motorSpeed ?? 0;
       const relOmega = bodyB.omega - bodyA.omega;
+      const target = joint.motorSpeed ?? 0;
       let lambda = -(relOmega - target) / invAngularMass;
 
-      const maxMotorTorque = Math.max(0, joint.maxMotorTorque ?? 0);
-      if (maxMotorTorque > 0) {
-        const maxMotorImpulse = maxMotorTorque * dt;
-        lambda = Math.max(-maxMotorImpulse, Math.min(maxMotorImpulse, lambda));
+      if (joint.maxMotorTorque && joint.maxMotorTorque > 0) {
+        const maxImpulse = joint.maxMotorTorque * dt;
+        lambda = Math.max(-maxImpulse, Math.min(maxImpulse, lambda));
       }
 
       bodyA.omega -= iiA * lambda;

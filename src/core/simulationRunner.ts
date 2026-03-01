@@ -32,14 +32,18 @@ export class SimulationRunner {
 
   step(steps = 1): void {
     for (let i = 0; i < steps; i += 1) {
-      const next = rk4Step(
-        this.model.getState(),
-        this.model.getTime(),
-        this.fixedDt,
-        this.model.derivatives.bind(this.model),
-      );
-      this.model.setState(next);
-      this.model.setTime(this.model.getTime() + this.fixedDt);
+      if (this.model.step) {
+        this.model.step(this.fixedDt);
+      } else {
+        const next = rk4Step(
+          this.model.getState(),
+          this.model.getTime(),
+          this.fixedDt,
+          this.model.derivatives.bind(this.model),
+        );
+        this.model.setState(next);
+        this.model.setTime(this.model.getTime() + this.fixedDt);
+      }
     }
     this.onUpdate();
   }

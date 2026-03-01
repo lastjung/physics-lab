@@ -118,6 +118,12 @@ export class RevoluteDemo implements SimulationModel {
 
   getParams(): RevoluteDemoParams { return { ...this.params }; }
 
+  step(dt: number): void {
+      // Use internal resolver logic (semi-implicit behavior inside resolveCollisions)
+      this.resolveCollisions();
+      this.time += dt;
+  }
+
   resolveCollisions(): number {
     const bodies: BodyState[] = [
       {

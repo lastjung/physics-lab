@@ -9,7 +9,7 @@ export interface BodyState {
   restitution: number;
   radius: number;
   friction: number;
-  shape: 'circle' | 'aabb' | 'polygon';
+  shape: 'circle' | 'aabb' | 'polygon' | 'polyline';
   halfW?: number;
   halfH?: number;
   localVertices?: { x: number; y: number }[];

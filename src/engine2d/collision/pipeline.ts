@@ -17,11 +17,20 @@ export function clearImpulseCache(): void {
   impulseCache.clear();
 }
 
-export function detectContacts(bodies: BodyState[], dt = 0, bpOptions: BroadPhaseOptions = {}): Contact[] {
+export function detectContacts(bodies: BodyState[], dt = 0, bpOptions: BroadPhaseOptions = {}, joints: Joint[] = []): Contact[] {
   const contacts: Contact[] = [];
   const candidates = computeCandidates(bodies, dt, bpOptions);
   
+  const jointPairs = new Set<string>();
+  for (const j of joints) {
+    const ids = [j.bodyIdA, j.bodyIdB].sort();
+    jointPairs.add(`${ids[0]}_${ids[1]}`);
+  }
+
   for (const [a, b] of candidates) {
+    const ids = [a.id, b.id].sort();
+    if (jointPairs.has(`${ids[0]}_${ids[1]}`)) continue;
+
     if (a.shape === 'circle' && b.shape === 'circle') {
       processCircleCircle(a, b, contacts);
     } else if (a.shape === 'circle' && b.shape === 'aabb') {
@@ -40,6 +49,18 @@ export function detectContacts(bodies: BodyState[], dt = 0, bpOptions: BroadPhas
       processPolygonAABB(a, b, contacts);
     } else if (a.shape === 'aabb' && b.shape === 'polygon') {
       processPolygonAABB(b, a, contacts);
+    } else if (a.shape === 'circle' && b.shape === 'polyline') {
+      processCirclePolyline(a, b, contacts);
+    } else if (a.shape === 'polyline' && b.shape === 'circle') {
+      processCirclePolyline(b, a, contacts);
+    } else if (a.shape === 'aabb' && b.shape === 'polyline') {
+      processAABBPolyline(a, b, contacts);
+    } else if (a.shape === 'polyline' && b.shape === 'aabb') {
+      processAABBPolyline(b, a, contacts);
+    } else if (a.shape === 'polygon' && b.shape === 'polyline') {
+      processPolygonPolyline(a, b, contacts);
+    } else if (a.shape === 'polyline' && b.shape === 'polygon') {
+      processPolygonPolyline(b, a, contacts);
     }
   }
 
@@ -286,6 +307,112 @@ function processPolygonAABB(poly: BodyState, aabb: BodyState, contacts: Contact[
     processPolygonPolygon(poly, tempAABBBody, contacts);
 }
 
+function processCirclePolyline(circle: BodyState, polylineBody: BodyState, contacts: Contact[]) {
+  const points = polylineBody.worldVertices!;
+  if (points.length < 2) return;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p1 = points[i];
+    const p2 = points[i+1];
+
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const len2 = dx * dx + dy * dy;
+    if (len2 < 1e-9) continue;
+
+    let t = ((circle.x - p1.x) * dx + (circle.y - p1.y) * dy) / len2;
+    t = Math.max(0, Math.min(1, t));
+
+    const closestX = p1.x + t * dx;
+    const closestY = p1.y + t * dy;
+
+    const cdx = circle.x - closestX;
+    const cdy = circle.y - closestY;
+    const dist2 = cdx * cdx + cdy * cdy;
+
+    if (dist2 < circle.radius * circle.radius) {
+      const dist = Math.sqrt(dist2);
+      
+      // Calculate segment normal (pointing UP from ground segment direction)
+      const len = Math.sqrt(len2);
+      let nx = -dy / len;
+      let ny = dx / len;
+
+      // Ensure normal points towards the circle center
+      if (cdx * nx + cdy * ny < 0) { nx = -nx; ny = -ny; }
+
+      const penetration = circle.radius - dist;
+
+      // addContact normal points from A to B (Circle to Polyline)
+      // So use the inverted normal to push the circle OUT
+      addContact(circle, polylineBody, -nx, -ny, [{
+        px: closestX,
+        py: closestY,
+        penetration,
+        cachedNormalImpulse: 0,
+        cachedTangentImpulse: 0
+      }], contacts);
+    }
+  }
+}
+
+function processAABBPolyline(aabb: BodyState, polyline: BodyState, contacts: Contact[]) {
+    const hw = aabb.halfW || 0;
+    const hh = aabb.halfH || 0;
+    const aabbVertices = [
+        { x: aabb.x - hw, y: aabb.y - hh },
+        { x: aabb.x + hw, y: aabb.y - hh },
+        { x: aabb.x + hw, y: aabb.y + hh },
+        { x: aabb.x - hw, y: aabb.y + hh }
+    ];
+    const tempAABB = { ...aabb, worldVertices: aabbVertices, shape: 'polygon' as const };
+    processPolygonPolyline(tempAABB, polyline, contacts);
+}
+
+function processPolygonPolyline(poly: BodyState, polyline: BodyState, contacts: Contact[]) {
+    const polyPoints = poly.worldVertices!;
+    const linePoints = polyline.worldVertices!;
+    if (linePoints.length < 2) return;
+
+    for (let i = 0; i < linePoints.length - 1; i++) {
+        const p1 = linePoints[i];
+        const p2 = linePoints[i+1];
+        
+        // Treat segment as a very thin polygon or just do Segment-Polygon SAT
+        // For Phase 1, we can find poly vertices that are below the segment
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const len = Math.hypot(dx, dy);
+        if (len < 1e-9) continue;
+        
+        const nx = -dy / len;
+        const ny = dx / len;
+        
+        // Check poly vertices against segment line
+        for (const v of polyPoints) {
+            const vdx = v.x - p1.x;
+            const vdy = v.y - p1.y;
+            
+            // Projection onto normal
+            const dist = vdx * nx + vdy * ny;
+            
+            // Projection onto segment
+            const t = (vdx * dx + vdy * dy) / (len * len);
+            
+            if (t >= 0 && t <= 1 && dist < 0) {
+                // Collision!
+                addContact(poly, polyline, -nx, -ny, [{
+                    px: v.x,
+                    py: v.y,
+                    penetration: -dist,
+                    cachedNormalImpulse: 0,
+                    cachedTangentImpulse: 0
+                }], contacts);
+            }
+        }
+    }
+}
+
 function addContact(a: BodyState, b: BodyState, nx: number, ny: number, points: any[], contacts: Contact[]) {
   const sortedIds = [a.id, b.id].sort();
   const contactId = `${sortedIds[0]}:${sortedIds[1]}`;
@@ -358,7 +485,7 @@ export function stepCollisionPipeline(bodies: BodyState[], options: StepOptions 
   const vIter = Math.max(1, Math.floor(velocityIterations));
   const pIter = Math.max(1, Math.floor(positionIterations));
   const bodyMap = new Map(bodies.map(b => [b.id, b]));
-  const contacts = detectContacts(bodies, dt, broadPhase);
+  const contacts = detectContacts(bodies, dt, broadPhase, joints);
   let warmStartedCount = 0;
 
   if (warmStart) {
@@ -419,7 +546,7 @@ export function stepCollisionPipeline(bodies: BodyState[], options: StepOptions 
       const a = bodyMap.get(joint.bodyIdA);
       const b = bodyMap.get(joint.bodyIdB);
       if (!a || !b) continue;
-      if (joint.type === 'distance') solveDistanceVelocity(joint, a, b);
+      if (joint.type === 'distance') solveDistanceVelocity(joint, a, b, dt / vIter);
       else if (joint.type === 'revolute') solveRevoluteVelocity(joint, a, b, dt / vIter);
       else if (joint.type === 'prismatic') solvePrismaticVelocity(joint, a, b, dt / vIter);
       else if (joint.type === 'wheel') solveWheelVelocity(joint, a, b, dt / vIter);

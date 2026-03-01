@@ -112,7 +112,7 @@ export class WheelJointDemo implements SimulationModel {
       // Ground
       {
         id: 'ground',
-        x: 0, y: 0,
+        x: 0, y: -1.5,
         vx: 0, vy: 0,
         mass: 0, invMass: 0,
         restitution: 0.5, friction: 0.5, shape: 'aabb',
@@ -168,12 +168,12 @@ export class WheelJointDemo implements SimulationModel {
 
   getParams(): WheelJointDemoParams { return { ...this.params }; }
 
-  resolveCollisions(dt: number): number {
-    const subStepDt = dt / this.params.subSteps;
-    let totalImpulse = 0;
+  getBodies(): BodyState[] { return this.bodies; }
 
+  step(dt: number): void {
+    const subStepDt = dt / this.params.subSteps;
     for (let s = 0; s < this.params.subSteps; s++) {
-      // 1. Apply gravity & simple integration
+      // 1. Semi-Implicit Euler
       for (const b of this.bodies) {
         if (b.invMass > 0) {
           b.vy -= this.params.gravity * subStepDt;
@@ -183,16 +183,14 @@ export class WheelJointDemo implements SimulationModel {
         }
       }
 
-      // 2. Resolve collisions and joints
-      const res = stepCollisionPipeline(this.bodies, {
+      // 2. Resolve
+      stepCollisionPipeline(this.bodies, {
         velocityIterations: 8,
         positionIterations: 3,
         joints: this.joints,
         dt: subStepDt
       });
-      totalImpulse += res.impulse;
     }
-
-    return totalImpulse;
+    this.time += dt;
   }
 }

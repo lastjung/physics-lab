@@ -1,8 +1,7 @@
 import { BodyState } from '../collision/types';
 import { DistanceJoint } from './types';
 
-export function solveDistanceVelocity(joint: DistanceJoint, bodyA: BodyState, bodyB: BodyState) {
-  // World anchors
+export function solveDistanceVelocity(joint: DistanceJoint, bodyA: BodyState, bodyB: BodyState, dt: number) {
   const cosA = Math.cos(bodyA.angle), sinA = Math.sin(bodyA.angle);
   const cosB = Math.cos(bodyB.angle), sinB = Math.sin(bodyB.angle);
 
@@ -28,14 +27,33 @@ export function solveDistanceVelocity(joint: DistanceJoint, bodyA: BodyState, bo
 
   const relV = (vbx - vax) * dx + (vby - vay) * dy;
 
-  // Mass matrix for the constraint
   const invMassSum = bodyA.invMass + bodyB.invMass;
   const rAn = raX * dy - raY * dx;
   const rBn = rbX * dy - rbY * dx;
   const K = invMassSum + rAn * rAn * bodyA.invInertia + rBn * rBn * bodyB.invInertia;
 
   if (K > 0) {
-    const impulse = -relV / K;
+    let bias = 0;
+    let gamma = 0;
+    let impulse = 0;
+
+    if (joint.frequency && joint.frequency > 0 && dt > 0) {
+        const C = dist - joint.length;
+        const omega = 2.0 * Math.PI * joint.frequency;
+        const d = 2.0 * (joint.dampingRatio ?? 0.7) * omega; // Effective damping per mass
+        const k = omega * omega; // Effective stiffness per mass
+        
+        // Softness coeffs
+        const g = dt * (d + dt * k);
+        gamma = g > 0 ? 1.0 / g : 0;
+        const beta = dt * dt * k / g;
+        
+        bias = C * beta / dt;
+        impulse = -(relV + bias) / (K + gamma);
+    } else {
+        impulse = -relV / K;
+    }
+
     const ix = impulse * dx;
     const iy = impulse * dy;
 

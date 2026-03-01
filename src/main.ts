@@ -26,6 +26,7 @@ import { polygonShapesPlugin } from './plugins/PolygonShapesPlugin';
 import { springMassPlugin } from './plugins/SpringMassPlugin';
 import { revoluteDemoPlugin } from './plugins/RevoluteDemoPlugin';
 import { wheelJointDemoPlugin } from './plugins/WheelJointDemoPlugin';
+import { curvedObjectPlugin, rigidRollerCoasterPlugin, stringPlugin, pendulumClockPlugin, rigidDoublePendulumPlugin } from './plugins/Phase5Plugins';
 import { sceneEditorPlugin } from './plugins/SceneEditorPlugin';
 import type { ActivePlugin, SimulationPlugin } from './plugins/types';
 import { getPresetById, simulationPresets } from './simulations/registry';
@@ -100,6 +101,11 @@ const plugins: Record<string, SimulationPlugin> = {
   [doublePendulumComparePlugin.id]: doublePendulumComparePlugin,
   [revoluteDemoPlugin.id]: revoluteDemoPlugin,
   [wheelJointDemoPlugin.id]: wheelJointDemoPlugin,
+  [curvedObjectPlugin.id]: curvedObjectPlugin,
+  [rigidRollerCoasterPlugin.id]: rigidRollerCoasterPlugin,
+  [stringPlugin.id]: stringPlugin,
+  [pendulumClockPlugin.id]: pendulumClockPlugin,
+  [rigidDoublePendulumPlugin.id]: rigidDoublePendulumPlugin,
   [sceneEditorPlugin.id]: sceneEditorPlugin,
 };
 
@@ -151,23 +157,24 @@ const quickLibrary = document.createElement('div');
 quickLibrary.className = 'game-library';
 const quickLibraryRow = document.createElement('div');
 quickLibraryRow.className = 'game-library-row';
-const NEW_GAME_IDS = new Set([
-  'roller-coaster-spring',
-  'roller-coaster-flight',
-  'colliding-blocks',
-  'polygon-shapes',
-  'double-pendulum-engine',
-  'cart-pendulum-engine',
-]);
-const tabOrderedPresets = [...simulationPresets].sort((a, b) => {
-  const aNew = NEW_GAME_IDS.has(a.id);
-  const bNew = NEW_GAME_IDS.has(b.id);
-  if (aNew === bNew) return 0;
-  return aNew ? 1 : -1;
-});
-
 const isEnginePreset = (presetId: string, pluginId: string): boolean =>
-  presetId.endsWith('-engine') || pluginId.includes('engine');
+  presetId.endsWith('-engine') || 
+  pluginId.includes('engine') || 
+  presetId === 'revolute-demo' || 
+  presetId === 'wheel-joint-demo' || 
+  presetId === 'curved-object-demo' || 
+  presetId === 'rigid-roller-coaster-demo' || 
+  presetId === 'string-demo' || 
+  presetId === 'pendulum-clock-demo' || 
+  presetId === 'rigid-double-pendulum-demo' || 
+  presetId === 'scene-editor';
+
+const tabOrderedPresets = [...simulationPresets].sort((a, b) => {
+  const aEng = isEnginePreset(a.id, a.pluginId);
+  const bEng = isEnginePreset(b.id, b.pluginId);
+  if (aEng === bEng) return 0;
+  return aEng ? 1 : -1; // Standard first, then Engine
+});
 
 let engineDividerInserted = false;
 tabOrderedPresets.forEach((preset) => {
@@ -184,11 +191,13 @@ tabOrderedPresets.forEach((preset) => {
 
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = preset.id === activePreset.id ? 'game-btn active' : 'game-btn secondary';
+  button.className = preset.id === (activePreset ? activePreset.id : '') ? 'game-btn active' : 'game-btn secondary';
   button.textContent = preset.name;
+  button.setAttribute('aria-label', `Switch to ${preset.name} simulation`);
   button.addEventListener('click', () => choosePreset(preset.id));
   quickLibraryRow.append(button);
 });
+
 quickLibrary.append(quickLibraryRow);
 
 const mobileMenuButton = document.createElement('button');
@@ -236,6 +245,7 @@ for (const id of loadRecent()) {
   chip.type = 'button';
   chip.className = id === activePreset.id ? 'mini-chip active' : 'mini-chip';
   chip.textContent = preset.name;
+  chip.setAttribute('aria-label', `Switch to recent simulation: ${preset.name}`);
   chip.addEventListener('click', () => choosePreset(preset.id));
   recentRow.append(chip);
 }
@@ -254,6 +264,9 @@ const focusedPresets = focusedPresetIds.map((id) => getPresetById(id));
 for (const preset of focusedPresets) {
   const card = document.createElement('article');
   card.className = preset.id === activePreset.id ? 'game-card active' : 'game-card';
+  card.setAttribute('role', 'button');
+  card.setAttribute('tabindex', '0');
+  card.setAttribute('aria-label', `Featured simulation: ${preset.name}. ${preset.summary}`);
 
   const top = document.createElement('div');
   top.className = 'game-card-top';
@@ -270,6 +283,7 @@ for (const preset of focusedPresets) {
   favorite.className = favoriteId === preset.id ? 'favorite-btn active' : 'favorite-btn';
   favorite.textContent = favoriteId === preset.id ? '★' : '☆';
   favorite.title = 'Set favorite';
+  favorite.setAttribute('aria-label', favoriteId === preset.id ? 'Remove from favorites' : 'Add to favorites');
   favorite.addEventListener('click', (event) => {
     event.stopPropagation();
     const nextFavorite = loadFavorite() === preset.id ? null : preset.id;
@@ -535,6 +549,11 @@ window.addEventListener('keydown', (event) => {
 
   const target = event.target as HTMLElement | null;
   if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')) return;
+
+  if (event.key === 'Enter' && target && target.classList.contains('game-card')) {
+    target.click();
+    return;
+  }
 
   if (event.code === 'Space') {
     event.preventDefault();

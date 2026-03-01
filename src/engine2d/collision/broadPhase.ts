@@ -17,7 +17,7 @@ export interface BroadPhaseOptions {
 export function getBodyAABB(body: BodyState, dt = 0): BoundingBox {
   let x1 = Infinity, x2 = -Infinity, y1 = Infinity, y2 = -Infinity;
 
-  if (body.shape === 'polygon' && body.worldVertices && body.worldVertices.length > 0) {
+  if ((body.shape === 'polygon' || body.shape === 'polyline') && body.worldVertices && body.worldVertices.length > 0) {
     for (const v of body.worldVertices) {
       if (v.x < x1) x1 = v.x; if (v.x > x2) x2 = v.x;
       if (v.y < y1) y1 = v.y; if (v.y > y2) y2 = v.y;

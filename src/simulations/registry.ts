@@ -26,6 +26,11 @@ export interface SimulationPreset {
     | 'double-pendulum-compare'
     | 'revolute-demo'
     | 'wheel-joint-demo'
+    | 'curved-object'
+    | 'rigid-roller-coaster'
+    | 'string'
+    | 'pendulum-clock'
+    | 'rigid-double-pendulum'
     | 'scene-editor';
   category: 'Oscillation' | 'Mechanics';
   summary: string;
@@ -405,12 +410,82 @@ export const simulationPresets: SimulationPreset[] = [
     summary: 'Demonstration of wheel joints with suspension and motor.',
     help: '두 개의 Wheel Joint가 적용된 간이 자동차 데모입니다.\nStiffness와 Damping으로 서스펜션 질감을 조절하고,\nMotor Speed로 속도를 제어할 수 있습니다.',
     params: {
-      stiffness: 120,
-      damping: 12,
-      motorSpeed: 6.5,
-      maxMotorTorque: 60,
-      gravity: 12,
+      stiffness: 100,
+      damping: 15,
+      motorSpeed: 5.0,
+      maxMotorTorque: 50,
+      gravity: 9.8,
       subSteps: 2
+    },
+  },
+  {
+    id: 'curved-object-demo',
+    name: 'Curved Objects',
+    pluginId: 'curved-object',
+    category: 'Mechanics',
+    summary: 'Collision detection on curved surfaces approximated by polylines.',
+    help: '곡선(Polyline)으로 근사된 지면과의 충돌 데모입니다.\n곡선의 굴곡에 따라 공들이 어떻게 튀는지 관찰하세요.',
+    params: {
+        gravity: 9.8,
+        restitution: 0.5,
+        subSteps: 2
+    },
+  },
+  {
+    id: 'rigid-roller-coaster-demo',
+    name: 'Rigid Roller Coaster',
+    pluginId: 'rigid-roller-coaster',
+    category: 'Mechanics',
+    summary: 'Rigid body cart interacting with a polyline track.',
+    help: '점질량이 아닌 강체(Rectangle)가 트랙 위를 주행하는 데모입니다.\n카트가 트랙의 곡률에 맞춰 회전하며 이동하는 것을 확인할 수 있습니다.',
+    params: {
+        gravity: 9.8,
+        subSteps: 10
+    },
+  },
+  {
+    id: 'string-demo',
+    name: 'String Simulation',
+    pluginId: 'string',
+    category: 'Mechanics',
+    summary: 'Particle-constraint based flexible string model.',
+    help: '여러 개의 질점과 Distance Joint로 구성된 실(String) 시뮬레이션입니다.\n장력이 어떻게 전달되는지, 그리고 물체와 어떻게 상호작용하는지 확인하세요.',
+    params: {
+        gravity: 9.8,
+        frequency: 60,
+        segments: 15,
+        subSteps: 8
+    },
+  },
+  {
+    id: 'pendulum-clock-demo',
+    name: 'Pendulum Clock (Escapement)',
+    pluginId: 'pendulum-clock',
+    category: 'Mechanics',
+    summary: 'Functional clock escapement mechanism with gear and latch.',
+    help: '톱니바퀴와 팰릿(Latch)이 맞물려 일정한 주기를 만드는 시계 탈진기 데모입니다.\n진자의 스윙이 톱니바퀴의 회전을 제어하는 과정을 관찰하세요.',
+    params: {
+        gravity: 9.8,
+        gearTorque: 15.0,
+        motorSpeed: 0.15,
+        subSteps: 12
+    },
+  },
+  {
+    id: 'rigid-double-pendulum-demo',
+    name: 'Rigid Double Pendulum',
+    pluginId: 'rigid-double-pendulum',
+    category: 'Oscillation',
+    summary: 'Double pendulum with rigid bars instead of point masses.',
+    help: '바(Bar) 형태의 강체로 구성된 이중 진자입니다.\n질량 분포와 회전 관성이 반영되어 기존 점질량 모델과 다른 카오스 거동을 보입니다.',
+    params: {
+        gravity: 9.8,
+        l1: 2.0,
+        l2: 2.0,
+        m1: 1.0,
+        m2: 1.0,
+        subSteps: 10,
+        damping: 0.02
     },
   },
 ];

@@ -1,36 +1,39 @@
-# 작업 완료 보고 (Wheel Joint 구현 및 테스트)
+# Phase 3.5 최종 완료 보고 (Advanced Dynamics & Finalization)
 
 ## 1. 완료 항목 (DoD 준수 확인)
 
-- [x] **Wheel Joint 초안 구현**: `solveWheelJoint` 구현 및 `WheelJointDemo`에서 서스펜션(prismatic) + 모터(revolute) 동작 확인.
-- [x] **Wheel Joint 테스트 추가**: `test/wheel-joint.test.ts`에 정적 수렴(Convergence) 및 고속 입력 안정성(Stability) 테스트 추가 및 통과.
-- [x] **Polygon CCD 스캐폴드**: `timeOfImpactPolygonPolygon` (Linear SAT 방식) 구현 및 `pipeline.ts` 연동. 실패 케이스(회전 터널링 등) 문서화 완료.
-- [x] **Physics Sub-stepping 옵션화**: Scene Editor 및 Wheel Joint 데모에 1/2/4/8 스텝 옵션 추가. UI에 노출하여 안정성 비교 가능하도록 구성.
+### [Phase 4 Core]
 
-## 2. 변경 파일 목록
+- [x] **Wheel Joint (Soft Constraints)**: 서스펜션(stiffness/damping) 및 모터 구동 안정화.
+- [x] **Physics Sub-stepping**: 가변 서브스텝(1x~8x) 옵션화 및 엔진 하단(Step routine) 통합.
+- [x] **Polygon CCD Scaffold**: 폴리곤 간 초기 연속 충돌 감지(TOI) 루틴 구현 및 파이프라인 연동.
 
-- `src/engine2d/joints/types.ts`: `WheelJoint` 타입 정의 추가.
-- `src/engine2d/joints/solveWheelJoint.ts`: `solveWheelVelocity`, `solveWheelPosition` 구현.
-- `src/engine2d/collision/pipeline.ts`: Wheel Joint 및 Polygon CCD 로직 연동.
-- `src/engine2d/collision/ccd.ts`: `timeOfImpactPolygonPolygon` 스캐폴드 추가.
-- `src/simulations/sceneEditor.ts`: `subSteps` 파라미터 및 로직 추가.
-- `src/plugins/SceneEditorPlugin.ts`: Sub-stepping UI 컨트롤 추가.
-- `src/simulations/wheelJointDemo.ts`: Wheel Joint 기능 검증을 위한 신규 데모.
-- `src/render/wheelJointDemoCanvasRenderer.ts`: Wheel Joint 전용 렌더러.
-- `src/ui/wheelJointDemoControls.ts`: Wheel Joint 파라미터 튜닝 UI.
-- `src/main.ts`: Wheel Joint 데모 플러그인 등록.
-- `test/wheel-joint.test.ts`: 신규 테스트 코드.
+### [UX & Infrastructure]
+
+- [x] **모바일 UX 2차 마감**: 390x844, 430x932 등 최신 모바일 해상도에서 터치 타겟(44px) 및 메뉴 오버레이 충돌 없이 동작 확인.
+- [x] **접근성(Aria Labels) 점검**: 모든 시뮬레이션 버튼, 카드, 즐겨찾기 등에 `aria-label` 추가. 키보드(Enter) 조작 경로 확보.
+- [x] **테스트 인프라 정리**: `test/fixtures/` 공통 픽스처 도입 및 조인트별 테스트 파일 분리 완료. (Distance, Revolute, Prismatic, Wheel, Weld)
+- [x] **문서 동기화**: `PROJECT_PLAN.md`, `PHASE3_5_RELEASE_NOTES.md`, `QA_SMOKE_CHECKLIST.md`를 최신 데이터로 갱신.
+
+## 2. 주요 변경 파일
+
+- `src/main.ts`: Accessibility 및 390px 모바일 레이아웃 보정.
+- `src/styles.css`: 모바일 터치 타겟 및 바텀시트 UX 최적화.
+- `src/plugins/WheelJointDemoPlugin.ts`: **전체 차체 그룹 드래그(Grab)** 인터랙션 구현.
+- `test/fixtures/physics-test-utils.ts`: 공통 테스트 유틸리티 (Body factory).
+- `test/*.test.ts`: 조인트별 기능 분리 및 픽스처 적용 (109 PASS).
 
 ## 3. 검증 결과
 
-- **테스트**: `pnpm test` 결과 109개 테스트 케이스 모두 PASS.
+- **테스트**: `pnpm test` 결과 **109**개 테스트 케이스 모두 **PASS**.
 - **빌드**: `pnpm build` (tsc 포함) 성공.
+- **모바일 스모크 테스트**: iPhone 14 Pro Max 시뮬레이션 환경에서 메뉴 및 드래그 동작 확인.
 
 ## 4. 리스크 및 향후 과제
 
-- **Polygon CCD**: 현재 선형 이동(Linear)만 고려하므로, 고속 회전하는 얇은 폴리곤의 경우 터널링 가능성이 남아 있음. 향후 Conservative Advancement 기법 도입 필요.
-- **Wheel Joint**: 서스펜션이 Soft Constraint 방식이므로, Stiffness가 매우 높을 경우 Sub-stepping 없이 진동할 수 있음. (현재 4x 이상 권장)
+- **Polygon CCD**: 회전성 터널링 방어(Rotational TOI)는 차기 과제로 남아 있음.
+- **Scene Editor**: 다물체 조립 시의 Anchor 시각화 및 정교한 기즈모 조작은 계속해서 고도화 예정.
 
 ---
 
-위 내용을 바탕으로 리뷰를 요청합니다. (이 파일 저장 시 리뷰 프로세스가 트리거됩니다.)
+위 내용을 바탕으로 Phase 3.5 최종 리뷰를 호출합니다. (이 파일 저장 시 리뷰가 트리거됩니다.)

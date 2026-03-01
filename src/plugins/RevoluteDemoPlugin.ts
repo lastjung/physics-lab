@@ -16,7 +16,6 @@ export const revoluteDemoPlugin: SimulationPlugin = {
     const renderer = new RevoluteDemoCanvasRenderer(context.canvas, model);
     
     const redraw = () => {
-      model.resolveCollisions();
       renderer.draw();
       const stats = model.getJointState();
       

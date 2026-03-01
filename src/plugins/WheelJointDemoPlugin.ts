@@ -26,14 +26,99 @@ export const wheelJointDemoPlugin: SimulationPlugin = {
     };
 
     const runner = new SimulationRunner(model, redraw);
-    // Overwrite the default step method because WheelJointDemo handles integration inside resolveCollisions
-    (runner as any).step = (dt: number) => {
-        model.resolveCollisions(dt);
-        model.setTime(model.getTime() + dt);
-        redraw();
-    };
 
     const uiControls = mountWheelJointDemoControls(context.menuRoot, model, redraw);
+
+    // --- Interaction logic ---
+    const disposers: Array<() => void> = [];
+    const on = (target: HTMLElement, type: string, handler: (event: any) => void) => {
+      target.addEventListener(type, handler);
+      disposers.push(() => target.removeEventListener(type, handler));
+    };
+
+    const toCanvasPoint = (event: PointerEvent) => {
+      const rect = context.canvas.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) * (context.canvas.width / rect.width),
+        y: (event.clientY - rect.top) * (context.canvas.height / rect.height)
+      };
+    };
+
+    let grabbingBody: any = null;
+    let grabOffset = { x: 0, y: 0 };
+    let resumeAfterDrag = false;
+
+    const applyDrag = (event: PointerEvent) => {
+      if (!grabbingBody) return;
+      const cp = toCanvasPoint(event);
+      const wp = renderer.screenToWorld(cp.x, cp.y);
+      
+      const dx = wp.x - grabOffset.x - grabbingBody.x;
+      const dy = wp.y - grabOffset.y - grabbingBody.y;
+
+      if (grabbingBody.id === 'chassis') {
+        const bodies = model.getBodies();
+        for (const b of bodies) {
+          if (b.invMass > 0) {
+            b.x += dx;
+            b.y += dy;
+            b.vx = 0;
+            b.vy = 0;
+            b.omega = 0;
+          }
+        }
+      } else {
+        grabbingBody.x += dx;
+        grabbingBody.y += dy;
+        grabbingBody.vx = 0;
+        grabbingBody.vy = 0;
+        grabbingBody.omega = 0;
+      }
+
+      redraw();
+    };
+
+    on(context.canvas, 'pointerdown', (event: PointerEvent) => {
+      const cp = toCanvasPoint(event);
+      const wp = renderer.screenToWorld(cp.x, cp.y);
+      const bodies = model.getBodies();
+      
+      let closest: any = null;
+      let minDist = 0.5;
+
+      for (const b of bodies) {
+        if (b.invMass === 0) continue;
+        const dist = Math.hypot(wp.x - b.x, wp.y - b.y);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = b;
+        }
+      }
+
+      if (closest) {
+        grabbingBody = closest;
+        grabOffset = { x: wp.x - closest.x, y: wp.y - closest.y };
+        context.canvas.setPointerCapture(event.pointerId);
+        resumeAfterDrag = runner.isRunning();
+        runner.stop();
+        applyDrag(event);
+      }
+    });
+
+    on(context.canvas, 'pointermove', (event: PointerEvent) => {
+      if (grabbingBody) applyDrag(event);
+    });
+    
+    const release = (event: PointerEvent) => {
+      if (!grabbingBody) return;
+      grabbingBody = null;
+      context.canvas.releasePointerCapture(event.pointerId);
+      if (resumeAfterDrag) runner.start();
+    };
+
+    on(context.canvas, 'pointerup', release);
+    on(context.canvas, 'pointercancel', release);
+    // -------------------------
 
     redraw();
 
@@ -46,10 +131,11 @@ export const wheelJointDemoPlugin: SimulationPlugin = {
           redraw();
       },
       step: (n) => {
-          for (let i = 0; i < (n || 1); i++) (runner as any).step(1/120);
+          for (let i = 0; i < (n || 1); i++) runner.step(1);
       },
       destroy: () => {
         runner.stop();
+        disposers.forEach(d => d());
         context.menuRoot.innerHTML = '';
       },
       onResize: (w, h) => {

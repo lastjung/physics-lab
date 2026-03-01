@@ -1,28 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { BodyState } from '../src/engine2d/collision/types';
 import { WheelJoint } from '../src/engine2d/joints/types';
 import { stepCollisionPipeline } from '../src/engine2d/collision/pipeline';
+import { createTestCircle, createTestStatic } from './fixtures/physics-test-utils';
 
 describe('Wheel Joint Physics', () => {
-    const createChassis = (id: string, x: number, y: number): BodyState => ({
-        id, x, y, vx: 0, vy: 0, angle: 0, omega: 0,
-        mass: 1, invMass: 1,
-        inertia: 1, invInertia: 1,
-        restitution: 0, friction: 0,
-        shape: 'circle', radius: 0.1
-    });
-
-    const createWheel = (id: string, x: number, y: number): BodyState => ({
-        id, x, y, vx: 0, vy: 0, angle: 0, omega: 0,
-        mass: 1, invMass: 1,
-        inertia: 1, invInertia: 1,
-        restitution: 0, friction: 0,
-        shape: 'circle', radius: 0.1
-    });
 
     it('Convergence: should pull two bodies together without external forces', () => {
-        const bA = createChassis('a', 0, 1.0);
-        const bB = createWheel('b', 0, 0.0);
+        const bA = createTestCircle('a', 0, 1.0);
+        const bB = createTestCircle('b', 0, 0.0);
         const bodies = [bA, bB];
 
         const joint: WheelJoint = {
@@ -59,10 +44,8 @@ describe('Wheel Joint Physics', () => {
     });
 
     it('Stability: high motor speed on static body', () => {
-        const bA = createChassis('a', 0, 0);
-        bA.mass = 0; bA.invMass = 0; bA.invInertia = 0; // Static
-        
-        const bB = createWheel('b', 0.5, 0);
+        const bA = createTestStatic('a', 0, 0);
+        const bB = createTestCircle('b', 0.5, 0);
         const bodies = [bA, bB];
 
         const joint: WheelJoint = {
