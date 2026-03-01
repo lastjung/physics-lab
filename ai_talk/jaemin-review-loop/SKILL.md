@@ -8,7 +8,7 @@ description: Reusable collaboration skill for Physics Lab AI<->재민 execution 
 ## Core Workflow
 
 1. Read latest status files first.
-- `ai_talk/JAEMIN_TASKS.md`
+- `ai_talk/CODE_TRIGGER.md`
 - `ai_talk/AI_COLLAB_RULES.md`
 
 2. Inspect code/document changes tied to reported work.
@@ -44,7 +44,7 @@ description: Reusable collaboration skill for Physics Lab AI<->재민 execution 
   - `pnpm build` => success, no type/build error
 
 ### 4) Report
-- Tell Jaemin exactly what to update in `ai_talk/JAEMIN_TASKS.md`:
+- Tell Jaemin exactly what to update in `ai_talk/CODE_TRIGGER.md`:
   - completed items
   - changed files
   - test/build outputs
@@ -71,7 +71,7 @@ Never hide P0/P1 behind summary text. Findings must come first.
 Use this minimal command sequence unless task requires more:
 
 ```bash
-rg -n "완료 항목|변경 파일|검증 결과|남은 이슈" ai_talk/JAEMIN_TASKS.md
+rg -n "완료 항목|변경 파일|검증 결과|남은 이슈" ai_talk/CODE_TRIGGER.md
 pnpm test
 pnpm build
 rg -n "TODO|FIXME|HACK" src test

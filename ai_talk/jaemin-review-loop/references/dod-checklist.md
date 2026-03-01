@@ -5,7 +5,7 @@
 - [ ] 관련 테스트가 추가되었거나 기존 테스트로 증명됨
 - [ ] `pnpm test` 통과
 - [ ] `pnpm build` 성공
-- [ ] 문서 상태(`JAEMIN_TASKS.md`)가 코드와 일치
+- [ ] 문서 상태(`CODE_TRIGGER.md`)가 코드와 일치
 
 ## New Feature
 - [ ] 입력/경계조건 처리

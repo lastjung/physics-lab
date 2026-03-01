@@ -45,4 +45,21 @@ describe('SceneEditorSimulation Scaffold', () => {
     sim.reset();
     expect(sim.getBodies().length).toBe(1); // Only floor
   });
+
+  it('should serialize and deserialize correctly', () => {
+    const sim = new SceneEditorSimulation();
+    sim.addCircle(1, 2, 0.5);
+    sim.addBox(3, 4, 1, 1);
+    
+    const json = sim.serialize();
+    const data = JSON.parse(json);
+    expect(data.bodies.length).toBe(2);
+    
+    const sim2 = new SceneEditorSimulation();
+    sim2.deserialize(json);
+    const bodies = sim2.getBodies();
+    expect(bodies.length).toBe(3); // Floor + 2
+    expect(bodies.find(b => b.id !== 'floor' && b.shape === 'circle')?.x).toBe(1);
+    expect(bodies.find(b => b.id !== 'floor' && b.shape === 'aabb')?.x).toBe(3);
+  });
 });

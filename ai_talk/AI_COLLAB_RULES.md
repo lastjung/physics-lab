@@ -4,12 +4,25 @@
 AI(Codex)와 재민이 같은 기준으로 빠르게 작업/검토/재지시를 반복하기 위한 규칙 문서.
 
 ## 기본 흐름
-1. AI: `AI_ORDERS_NOW.md` 갱신(오더 발행)
+1. AI: `CODE_ORDER.md` 갱신(재민에게 전달할 단일 오더)
 2. 재민: 오더 실행
 3. 재민: `검토해줘` 신호
 4. AI: 코드/문서/테스트 검증 + 판정 기록
 5. AI: 다음 오더 갱신
 6. 반복
+
+## 준자동 실행
+- 1회 자동 검토: `pnpm run ai:review-once`
+- 감시 모드(재민 문서 저장 감지): `pnpm run ai:watch-jaemin`
+- 감시 모드는 `ai_talk/CODE_TRIGGER.md` 변경 시 자동으로 test/build를 실행하고 `ai_talk/REVIEW_RESULT.md`와 `CODE_ALL_ORDER.md` AI 섹션을 갱신함
+- 데몬 시작: `pnpm run ai:auto-start`
+- 데몬 상태: `pnpm run ai:auto-status`
+- 데몬 중지: `pnpm run ai:auto-stop`
+
+## 재민 실행 규칙 (자동검토용)
+- 작업 시작 시 재민이 별도 터미널에서 `pnpm run ai:watch-jaemin` 실행
+- 작업 중 `CODE_TRIGGER.md` 저장 시 자동 검토(test/build) 수행
+- 작업 종료 시 재민이 감시 터미널에서 `Ctrl+C`로 종료
 
 ## 스킬 사용 (고정)
 - 스킬 경로: `ai_talk/jaemin-review-loop/SKILL.md`
@@ -19,7 +32,7 @@ AI(Codex)와 재민이 같은 기준으로 빠르게 작업/검토/재지시를 
 ## 역할 경계 (중요)
 - 감독/우선순위 결정권: AI
 - 실행/구현 책임: 재민
-- 재민은 `AI_ORDERS_NOW.md` 기준으로만 작업
+- 재민은 `CODE_ORDER.md` 기준으로 작업
 - 우선순위 변경은 제안 가능, 확정은 AI가 수행
 - 결과의 최종 기록/판정 업데이트는 AI가 수행
 
@@ -30,7 +43,7 @@ AI(Codex)와 재민이 같은 기준으로 빠르게 작업/검토/재지시를 
 - 완료 보고 시 문서 기록 필수
 
 ## 재민 결과 기록 규칙
-기록 파일: `ai_talk/JAEMIN_TASKS.md`
+기록 파일: `ai_talk/CODE_TRIGGER.md`
 
 아래 항목을 매번 업데이트:
 - `완료 항목`
@@ -38,6 +51,17 @@ AI(Codex)와 재민이 같은 기준으로 빠르게 작업/검토/재지시를 
 - `검증 결과` (`pnpm test`, `pnpm build`)
 - `남은 이슈 / 리스크`
 - `다음 제안 1~2개`
+- `저장 확인` (예: `저장 확인: 2026-03-01 06:45`)
+
+## 오더 전달 규칙 (단순)
+- AI -> 재민 전달 파일: `ai_talk/CODE_ORDER.md`
+- 재민은 `CODE_ORDER.md`의 최상단 `현재 오더`만 수행
+- 상세 백로그/이력은 `CODE_ALL_ORDER.md`에 보관
+
+## 파일 분리 원칙 (중요)
+- 오더 수신 파일: `CODE_ORDER.md` (읽기 전용, 트리거로 사용하지 않음)
+- 트리거 파일: `CODE_TRIGGER.md` (저장 시 자동 검토 트리거)
+- 같은 파일을 오더/트리거로 동시에 쓰지 않음
 
 ## AI 리뷰 출력 포맷 (고정)
 AI는 항상 아래 4블록으로 답변:
@@ -56,7 +80,7 @@ AI는 항상 아래 4블록으로 답변:
 - 예: `pnpm test` (전부 PASS), `pnpm build` (error 0)
 
 ### 4) Report
-- `JAEMIN_TASKS.md`에 반영할 문장/항목 지시
+- `CODE_TRIGGER.md`에 반영할 문장/항목 지시
 
 ## 코드 작업 룰
 - 기존 기능 깨는 변경 금지 (회귀 방지 우선)

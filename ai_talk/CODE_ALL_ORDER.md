@@ -2,7 +2,7 @@
 
 ## 시작 지시 (재민)
 
-`ai_talk/AI_COLLAB_RULES.md`와 `ai_talk/jaemin-review-loop/SKILL.md`를 먼저 읽고 운영 방식 이해해. 그 다음 `ai_talk/AI_ORDERS_NOW.md`의 `OPEN` 항목만 순서대로 실행해. 완료하면 문서 기록 후 `검토해줘`만 보내.
+`ai_talk/AI_COLLAB_RULES.md`와 `ai_talk/jaemin-review-loop/SKILL.md`를 먼저 읽고 운영 방식 이해해. 그 다음 `ai_talk/CODE_ORDER.md`의 `현재 오더`만 실행해. 완료하면 문서 기록 후 `검토해줘`만 보내.
 
 ## 운영 규칙
 
@@ -11,7 +11,7 @@
 - 재민은 우선순위를 바꾸지 않습니다.
 - 재민은 구현 후 `검토해줘`로 신호만 보냅니다.
 - 검증/판정/기록 업데이트는 AI가 수행합니다.
-- 완료 신호 전, `JAEMIN_TASKS.md` 기록을 필수로 합니다.
+- 완료 신호 전, `CODE_TRIGGER.md` 기록을 필수로 합니다.
 
 ## 상태 정의
 
@@ -31,12 +31,12 @@
 
 2. [DONE] QA 문서 모순 제거
 
-- DoD: `QA_SMOKE_CHECKLIST.md` 상단/본문 체크 상태 일치, 테스트 수치 최신화(현재 87 PASS)
+- DoD: `QA_SMOKE_CHECKLIST.md` 상단/본문 체크 상태 일치, 테스트 수치 최신화(당시 기준 87 PASS, 현재 91 PASS)
 - 산출물: 문서 diff
 
 3. [DONE] 결과 보고 문서 실기록
 
-- DoD: `JAEMIN_TASKS.md`의 결과 보고 5개 섹션(완료/변경파일/검증/리스크/다음제안) 실제 값 입력
+- DoD: `CODE_TRIGGER.md`의 결과 보고 5개 섹션(완료/변경파일/검증/리스크/다음제안) 실제 값 입력
 - 산출물: 문서 diff
 
 4. [DONE] 전체 검증 재실행
@@ -53,7 +53,7 @@
 
 2. [DONE] 문서 동기화
 
-- DoD: `PROJECT_PLAN.md`, `PHASE3_5_RELEASE_NOTES.md` 최신 구현 상태/테스트 수치(현재 87 PASS) 반영
+- DoD: `PROJECT_PLAN.md`, `PHASE3_5_RELEASE_NOTES.md` 최신 구현 상태/테스트 수치(성공 시점 기준 87~91 PASS) 반영
 - 산출물: 문서 diff 요약
 
 3. [DONE] Phase 4 킥오프 태스크 분해
@@ -90,22 +90,22 @@
 
 ### Cycle-4: 대량 백로그 오더 (연속 수행)
 
-1. [OPEN] Scene Editor 선택/생성 1차 완성
+1. [DONE] Scene Editor 선택/생성 1차 완성
 
 - DoD: Circle/Box 생성 + 선택 + 이동(드래그)까지 동작, 프리셋에서 실행 가능
 - 산출물: 신규 시뮬레이션/플러그인 파일 + 실행 절차
 
-2. [OPEN] Scene 저장/불러오기(localStorage)
+2. [DONE] Scene 저장/불러오기(localStorage)
 
 - DoD: 현재 장면을 저장 후 새로고침해도 복원
 - 산출물: JSON 스키마 + 저장/로드 코드 + 실패 케이스 1개 대응
 
-3. [OPEN] Scene 파일 Import/Export
+3. [DONE] Scene 파일 Import/Export
 
 - DoD: JSON 다운로드/업로드 가능, 잘못된 JSON 입력 시 에러 처리
 - 산출물: UI 버튼 + 파서/검증 로직
 
-4. [OPEN] Joint 에디터 UI
+4. [DONE] Joint 에디터 UI
 
 - DoD: Revolute/Prismatic 생성 및 핵심 파라미터 편집 가능
 - 산출물: 조인트 생성/편집 패널 + 상태 반영 코드
@@ -115,7 +115,7 @@
 - DoD: Prismatic + spring/damper 조합으로 2륜 데모 동작
 - 산출물: `solveWheelJoint`(또는 동등 구조) + 데모 프리셋
 
-6. [OPEN] Weld Joint 구현
+6. [DONE] Weld Joint 구현
 
 - DoD: 2개 바디를 강체처럼 고정, 분리/흔들림 최소화
 - 산출물: 솔버 + 회귀 테스트 2개 이상
@@ -157,6 +157,6 @@
 
 ## AI 전용 섹션 (재민 수정 금지)
 
-- 마지막 검증 시각: 2026-03-01 (pnpm test 91 PASS / pnpm build SUCCESS)
-- 마지막 판정: Cycle-3 DONE (Phase 4 킥오프 완료)
-- 다음 오더 발행 시각: (Cycle-4 대기 중)
+- 마지막 검증 시각: 2026-03-01 12:08:24 (pnpm test 94 PASS / pnpm build SUCCESS)
+- 마지막 판정: 자동 검증 통과 (94 PASS / build SUCCESS)
+- 다음 오더 발행 시각: 2026-03-01 12:08:24 (자동 리뷰)

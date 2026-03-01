@@ -15,7 +15,7 @@
 2. `pnpm build` - success with no errors
 
 ## Report
-- `JAEMIN_TASKS.md`에 아래 5개 섹션 업데이트:
+- `CODE_TRIGGER.md`에 아래 5개 섹션 업데이트:
 - 완료 항목
 - 변경 파일
 - 검증 결과

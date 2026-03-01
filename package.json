@@ -8,7 +8,12 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ai:review-once": "node ai_talk/scripts/review-once.mjs",
+    "ai:watch-jaemin": "node ai_talk/scripts/watch-jaemin.mjs",
+    "ai:auto-start": "bash ai_talk/scripts/start-auto-watch.sh",
+    "ai:auto-stop": "bash ai_talk/scripts/stop-auto-watch.sh",
+    "ai:auto-status": "bash ai_talk/scripts/status-auto-watch.sh"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

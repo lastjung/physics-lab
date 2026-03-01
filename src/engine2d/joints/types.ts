@@ -1,6 +1,6 @@
 import { BodyState } from '../collision/types';
 
-export type JointType = 'distance' | 'revolute' | 'prismatic';
+export type JointType = 'distance' | 'revolute' | 'prismatic' | 'weld';
 
 export interface BaseJoint {
   id: string;
@@ -45,4 +45,9 @@ export interface PrismaticJoint extends BaseJoint {
   upperTranslation?: number;
 }
 
-export type Joint = DistanceJoint | RevoluteJoint | PrismaticJoint;
+export interface WeldJoint extends BaseJoint {
+  type: 'weld';
+  referenceAngle: number;
+}
+
+export type Joint = DistanceJoint | RevoluteJoint | PrismaticJoint | WeldJoint;

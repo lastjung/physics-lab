@@ -2,7 +2,7 @@ import type { SimulationModel, StateVector } from '../core/types';
 import { BodyState } from '../engine2d/collision/types';
 import { stepCollisionPipeline } from '../engine2d/collision/pipeline';
 import { createBody } from '../engine2d/collision/bodyFactory';
-import { Joint } from '../engine2d/joints/types';
+import { Joint, PrismaticJoint } from '../engine2d/joints/types';
 
 export interface SceneEditorParams {
   gravity: number;
@@ -70,8 +70,26 @@ export class SceneEditorSimulation implements SimulationModel {
     return deriv;
   }
 
-  resolveCollisions(): void {
-    stepCollisionPipeline(this.bodies, { joints: this.joints });
+  resolveCollisions(dt: number): void {
+    stepCollisionPipeline(this.bodies, { joints: this.joints, dt });
+  }
+
+  step(dt: number): void {
+      // 1. Semi-implicit Euler
+      for (const b of this.bodies) {
+          if (b.invMass === 0) continue;
+          // Gravity
+          b.vy += this.params.gravity * dt;
+          
+          b.vx += 0; // No other forces for now
+          b.x += b.vx * dt;
+          b.y += b.vy * dt;
+          b.angle += b.omega * dt;
+      }
+      
+      // 2. Resolve
+      this.resolveCollisions(dt);
+      this.time += dt;
   }
 
   reset(): void {
@@ -109,11 +127,194 @@ export class SceneEditorSimulation implements SimulationModel {
       this.bodies.push(circle);
   }
 
+  addBox(x: number, y: number, w: number, h: number): void {
+      const box = createBody(`box_${Date.now()}`, w, h);
+      box.x = x;
+      box.y = y;
+      this.bodies.push(box);
+  }
+
+  getBodyAt(x: number, y: number): BodyState | null {
+      // Find top-most body at point (reverse order)
+      for (let i = this.bodies.length - 1; i >= 0; i--) {
+          const b = this.bodies[i];
+          if (b.id === 'floor') continue;
+
+          const dx = x - b.x;
+          const dy = y - b.y;
+
+          if (b.shape === 'circle') {
+              if (dx * dx + dy * dy <= b.radius * b.radius) return b;
+          } else if (b.shape === 'aabb') {
+              // Simple AABB check (ignoring rotation for selection scaffold)
+              if (Math.abs(dx) <= b.halfW! && Math.abs(dy) <= b.halfH!) return b;
+          }
+      }
+      return null;
+  }
+
   getBodies(): BodyState[] {
       return this.bodies;
   }
 
   getJoints(): Joint[] {
       return this.joints;
+  }
+
+  addRevoluteJoint(idA: string, idB: string, worldPos: { x: number; y: number }): void {
+      const bA = this.bodies.find(b => b.id === idA);
+      const bB = this.bodies.find(b => b.id === idB);
+      if (!bA || !bB) return;
+
+      const joint: Joint = {
+          id: `rev_${Date.now()}`,
+          type: 'revolute',
+          bodyIdA: idA,
+          bodyIdB: idB,
+          localAnchorA: this.toLocal(bA, worldPos),
+          localAnchorB: this.toLocal(bB, worldPos),
+          referenceAngle: bB.angle - bA.angle
+      };
+      this.joints.push(joint);
+  }
+
+  addPrismaticJoint(idA: string, idB: string, worldPos: { x: number; y: number }, worldAxis: { x: number; y: number }): void {
+      const bA = this.bodies.find(b => b.id === idA);
+      const bB = this.bodies.find(b => b.id === idB);
+      if (!bA || !bB) return;
+
+      const joint: PrismaticJoint = {
+          id: `prism_${Date.now()}`,
+          type: 'prismatic',
+          bodyIdA: idA,
+          bodyIdB: idB,
+          localAnchorA: this.toLocal(bA, worldPos),
+          localAnchorB: this.toLocal(bB, worldPos),
+          localAxisA: this.toLocalDir(bA, worldAxis),
+          referenceAngle: bB.angle - bA.angle
+      };
+      this.joints.push(joint);
+  }
+
+  addWeldJoint(idA: string, idB: string, worldPos: { x: number; y: number }): void {
+      const bA = this.bodies.find(b => b.id === idA);
+      const bB = this.bodies.find(b => b.id === idB);
+      if (!bA || !bB) return;
+
+      const joint: Joint = {
+          id: `weld_${Date.now()}`,
+          type: 'weld',
+          bodyIdA: idA,
+          bodyIdB: idB,
+          localAnchorA: this.toLocal(bA, worldPos),
+          localAnchorB: this.toLocal(bB, worldPos),
+          referenceAngle: bB.angle - bA.angle
+      };
+      this.joints.push(joint);
+  }
+
+  updateJoint(jointId: string, params: Partial<Joint>): void {
+      const joint = this.joints.find(j => j.id === jointId);
+      if (joint) {
+          Object.assign(joint, params);
+      }
+  }
+
+  removeJoint(jointId: string): void {
+      this.joints = this.joints.filter(j => j.id !== jointId);
+  }
+
+  getJointAt(x: number, y: number): Joint | null {
+      const threshold = 0.05;
+      for (const j of this.joints) {
+          // Check collision with anchor (approximation for selection)
+          const bA = this.bodies.find(b => b.id === j.bodyIdA);
+          if (!bA) continue;
+          const worldA = this.toWorld(bA, j.localAnchorA);
+          const dx = x - worldA.x;
+          const dy = y - worldA.y;
+          if (dx * dx + dy * dy < threshold * threshold) return j;
+      }
+      return null;
+  }
+
+  private toLocal(b: BodyState, world: { x: number; y: number }) {
+      const dx = world.x - b.x;
+      const dy = world.y - b.y;
+      const cos = Math.cos(-b.angle);
+      const sin = Math.sin(-b.angle);
+      return {
+          x: dx * cos - dy * sin,
+          y: dx * sin + dy * cos
+      };
+  }
+
+  private toWorld(b: BodyState, local: { x: number; y: number }) {
+      const cos = Math.cos(b.angle);
+      const sin = Math.sin(b.angle);
+      return {
+          x: b.x + (local.x * cos - local.y * sin),
+          y: b.y + (local.x * sin + local.y * cos)
+      };
+  }
+
+  private toLocalDir(b: BodyState, worldDir: { x: number; y: number }) {
+      const cos = Math.cos(-b.angle);
+      const sin = Math.sin(-b.angle);
+      return {
+          x: worldDir.x * cos - worldDir.y * sin,
+          y: worldDir.x * sin + worldDir.y * cos
+      };
+  }
+
+  serialize(): string {
+      // Filter out floor as it's static/recreated on reset
+      const sceneData = {
+          bodies: this.bodies.filter(b => b.id !== 'floor').map(b => ({
+              id: b.id,
+              x: b.x,
+              y: b.y,
+              vx: b.vx,
+              vy: b.vy,
+              angle: b.angle,
+              omega: b.omega,
+              shape: b.shape,
+              radius: b.radius,
+              halfW: b.halfW,
+              halfH: b.halfH,
+              mass: b.mass,
+              invMass: b.invMass,
+              inertia: b.inertia,
+              invInertia: b.invInertia
+          })),
+          joints: this.joints.map(j => ({ ...j }))
+      };
+      return JSON.stringify(sceneData);
+  }
+
+  deserialize(dataStr: string): void {
+      try {
+          const data = JSON.parse(dataStr);
+          this.reset();
+          if (data.bodies) {
+              data.bodies.forEach((b: any) => {
+                  this.bodies.push({
+                      ...b,
+                      // Ensure numeric types
+                      x: Number(b.x),
+                      y: Number(b.y),
+                      vx: Number(b.vx),
+                      vy: Number(b.vy),
+                      angle: Number(b.angle),
+                      omega: Number(b.omega)
+                  });
+              });
+          }
+          if (data.joints) {
+              this.joints = data.joints;
+          }
+      } catch (e) {
+          console.error('Failed to deserialize scene:', e);
+      }
   }
 }
