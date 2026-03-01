@@ -8,15 +8,21 @@ import { pileAttractPlugin } from './plugins/PileAttractPlugin';
 import { doublePendulumComparePlugin } from './plugins/DoublePendulumComparePlugin';
 import { carSuspensionPlugin } from './plugins/CarSuspensionPlugin';
 import { cartPendulumPlugin } from './plugins/CartPendulumPlugin';
+import { cartPendulumEnginePlugin } from './plugins/CartPendulumEnginePlugin';
 import { collisionLabPlugin } from './plugins/CollisionLabPlugin';
 import { coupledSpringPlugin } from './plugins/CoupledSpringPlugin';
 import { doublePendulumPlugin } from './plugins/DoublePendulumPlugin';
+import { doublePendulumEnginePlugin } from './plugins/DoublePendulumEnginePlugin';
 import { drivenPendulumPlugin } from './plugins/DrivenPendulumPlugin';
 import { newtonsCradlePlugin } from './plugins/NewtonsCradlePlugin';
 import { orbitPlugin } from './plugins/OrbitPlugin';
 import { pendulumPlugin } from './plugins/PendulumPlugin';
 import { rollerCoasterPlugin } from './plugins/RollerCoasterPlugin';
+import { rollerCoasterSpringPlugin } from './plugins/RollerCoasterSpringPlugin';
+import { rollerCoasterFlightPlugin } from './plugins/RollerCoasterFlightPlugin';
 import { rollerCoasterTwoBallsPlugin } from './plugins/RollerCoasterTwoBallsPlugin';
+import { collidingBlocksPlugin } from './plugins/CollidingBlocksPlugin';
+import { polygonShapesPlugin } from './plugins/PolygonShapesPlugin';
 import { springMassPlugin } from './plugins/SpringMassPlugin';
 import { revoluteDemoPlugin } from './plugins/RevoluteDemoPlugin';
 import { sceneEditorPlugin } from './plugins/SceneEditorPlugin';
@@ -72,15 +78,21 @@ const plugins: Record<string, SimulationPlugin> = {
   [billiardsPlugin.id]: billiardsPlugin,
   [carSuspensionPlugin.id]: carSuspensionPlugin,
   [cartPendulumPlugin.id]: cartPendulumPlugin,
+  [cartPendulumEnginePlugin.id]: cartPendulumEnginePlugin,
   [collisionLabPlugin.id]: collisionLabPlugin,
   [coupledSpringPlugin.id]: coupledSpringPlugin,
   [doublePendulumPlugin.id]: doublePendulumPlugin,
+  [doublePendulumEnginePlugin.id]: doublePendulumEnginePlugin,
   [drivenPendulumPlugin.id]: drivenPendulumPlugin,
   [newtonsCradlePlugin.id]: newtonsCradlePlugin,
   [orbitPlugin.id]: orbitPlugin,
   [pendulumPlugin.id]: pendulumPlugin,
   [rollerCoasterPlugin.id]: rollerCoasterPlugin,
+  [rollerCoasterSpringPlugin.id]: rollerCoasterSpringPlugin,
+  [rollerCoasterFlightPlugin.id]: rollerCoasterFlightPlugin,
   [rollerCoasterTwoBallsPlugin.id]: rollerCoasterTwoBallsPlugin,
+  [collidingBlocksPlugin.id]: collidingBlocksPlugin,
+  [polygonShapesPlugin.id]: polygonShapesPlugin,
   [springMassPlugin.id]: springMassPlugin,
   [hangingChainPlugin.id]: hangingChainPlugin,
   [pileAttractPlugin.id]: pileAttractPlugin,
@@ -137,7 +149,21 @@ const quickLibrary = document.createElement('div');
 quickLibrary.className = 'game-library';
 const quickLibraryRow = document.createElement('div');
 quickLibraryRow.className = 'game-library-row';
-simulationPresets.forEach((preset) => {
+const NEW_GAME_IDS = new Set([
+  'roller-coaster-spring',
+  'roller-coaster-flight',
+  'colliding-blocks',
+  'polygon-shapes',
+  'double-pendulum-engine',
+  'cart-pendulum-engine',
+]);
+const tabOrderedPresets = [...simulationPresets].sort((a, b) => {
+  const aNew = NEW_GAME_IDS.has(a.id);
+  const bNew = NEW_GAME_IDS.has(b.id);
+  if (aNew === bNew) return 0;
+  return aNew ? 1 : -1;
+});
+tabOrderedPresets.forEach((preset) => {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = preset.id === activePreset.id ? 'game-btn active' : 'game-btn secondary';
@@ -313,14 +339,28 @@ const audio = new AudioEngine();
 let soundEnabled = false;
 let playOnlySound = true;
 const resolveSfxProfile = (): 'default' | 'pendulum' | 'collision' | 'cradle' | 'coaster' => {
-  if (activePreset.id === 'collision-lab' || activePreset.id === 'billiards' || activePreset.id === 'pile-attract' || activePreset.id === 'hanging-chain') return 'collision';
+  if (
+    activePreset.id === 'collision-lab' ||
+    activePreset.id === 'billiards' ||
+    activePreset.id === 'pile-attract' ||
+    activePreset.id === 'hanging-chain' ||
+    activePreset.id === 'colliding-blocks' ||
+    activePreset.id === 'polygon-shapes'
+  ) return 'collision';
   if (activePreset.id === 'newtons-cradle') return 'cradle';
-  if (activePreset.id === 'roller-coaster' || activePreset.id === 'roller-coaster-two-balls') return 'coaster';
+  if (
+    activePreset.id === 'roller-coaster' ||
+    activePreset.id === 'roller-coaster-spring' ||
+    activePreset.id === 'roller-coaster-flight' ||
+    activePreset.id === 'roller-coaster-two-balls'
+  ) return 'coaster';
   if (
     activePreset.pluginId === 'pendulum' || 
     activePreset.pluginId === 'double-pendulum' || 
+    activePreset.pluginId === 'double-pendulum-engine' ||
     activePreset.pluginId === 'driven-pendulum' ||
-    activePreset.pluginId === 'double-pendulum-compare'
+    activePreset.pluginId === 'double-pendulum-compare' ||
+    activePreset.pluginId === 'cart-pendulum-engine'
   ) {
     return 'pendulum';
   }

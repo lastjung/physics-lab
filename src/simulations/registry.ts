@@ -5,6 +5,7 @@ export interface SimulationPreset {
     | 'pendulum'
     | 'spring-mass'
     | 'double-pendulum'
+    | 'double-pendulum-engine'
     | 'driven-pendulum'
     | 'coupled-spring'
     | 'orbit'
@@ -13,8 +14,13 @@ export interface SimulationPreset {
     | 'car-suspension'
     | 'newtons-cradle'
     | 'cart-pendulum'
+    | 'cart-pendulum-engine'
     | 'roller-coaster'
+    | 'roller-coaster-spring'
+    | 'roller-coaster-flight'
     | 'roller-coaster-two-balls'
+    | 'polygon-shapes'
+    | 'colliding-blocks'
     | 'pile-attract'
     | 'hanging-chain'
     | 'double-pendulum-compare'
@@ -71,6 +77,25 @@ export const simulationPresets: SimulationPreset[] = [
       '이중 진자의 카오스 특성을 보는 실험입니다.\n초기 각도/감쇠를 조금만 바꿔도 장기 궤적이 크게 달라질 수 있습니다.\n질량/길이 비율 조절로 모드 변화를 확인해보세요.',
     params: {
       damping: 0.02,
+    },
+  },
+  {
+    id: 'double-pendulum-engine',
+    name: 'Double Pendulum (Engine)',
+    pluginId: 'double-pendulum-engine',
+    category: 'Oscillation',
+    summary: 'Constraint-based double pendulum using Engine2D joints.',
+    help:
+      'Distance Joint 기반 엔진 이중진자입니다.\n길이 제약 오차(lenErr)를 보며 iteration 안정성을 비교할 수 있습니다.\n기존 ODE 버전과 동작 차이를 비교하기 좋습니다.',
+    params: {
+      length1: 1.05,
+      length2: 0.95,
+      mass1: 1.0,
+      mass2: 1.0,
+      damping: 0.04,
+      iterations: 12,
+      initialTheta1: 1.1,
+      initialTheta2: 0.8,
     },
   },
   {
@@ -163,6 +188,27 @@ export const simulationPresets: SimulationPreset[] = [
     },
   },
   {
+    id: 'cart-pendulum-engine',
+    name: 'Cart + Pendulum (Engine)',
+    pluginId: 'cart-pendulum-engine',
+    category: 'Mechanics',
+    summary: 'Constraint-based cart-pole with rail joint and pendulum rod.',
+    help:
+      'Prismatic Joint(레일) + Distance Joint(막대)로 구성된 엔진 기반 카트-진자입니다.\nODE 버전과 달리 제약 오차(err)와 iteration 영향을 직접 볼 수 있습니다.\n카트/추를 드래그해 초기 상태를 바꾸며 안정성을 비교하세요.',
+    params: {
+      cartMass: 1.5,
+      bobMass: 0.35,
+      length: 0.9,
+      cartSpring: 1.9,
+      cartDamping: 0.23,
+      linearDamping: 0.03,
+      driveAmplitude: 0.8,
+      driveFrequency: 1.1,
+      iterations: 14,
+      initialTheta: 0.45,
+    },
+  },
+  {
     id: 'roller-coaster',
     name: 'Roller Coaster',
     pluginId: 'roller-coaster',
@@ -176,6 +222,42 @@ export const simulationPresets: SimulationPreset[] = [
       trackTilt: 0.05,
       boundaryMode: 0,
       damping: 0.04,
+      initialX: -1.35,
+    },
+  },
+  {
+    id: 'roller-coaster-spring',
+    name: 'Coaster + Spring',
+    pluginId: 'roller-coaster-spring',
+    category: 'Mechanics',
+    summary: 'Track-constrained car attached to a spring anchor.',
+    help:
+      '카트가 트랙 위를 움직이면서 스프링 복원력도 함께 받는 모델입니다.\nSpring K와 Spring Rest X를 바꿔 공진/구속 효과를 비교하세요.\n카트를 드래그해 초기 위치를 바꿀 수 있습니다.',
+    params: {
+      trackAmplitude: 0.55,
+      trackFrequency: 1.35,
+      trackTilt: 0.05,
+      damping: 0.035,
+      springK: 10.0,
+      springDamping: 0.3,
+      springRestX: 0.0,
+      initialX: -1.2,
+    },
+  },
+  {
+    id: 'roller-coaster-flight',
+    name: 'Coaster + Flight',
+    pluginId: 'roller-coaster-flight',
+    category: 'Mechanics',
+    summary: 'Car can detach from track and re-contact via ballistic flight.',
+    help:
+      '급한 곡률 구간에서 카트가 트랙을 이탈해 비행(포물선) 후 다시 접촉합니다.\nFlight Threshold로 이탈 민감도를 조절할 수 있습니다.\n고주파 트랙에서 Flight/Track 전환을 관찰해 보세요.',
+    params: {
+      trackAmplitude: 0.62,
+      trackFrequency: 1.65,
+      trackTilt: 0.03,
+      damping: 0.035,
+      flightThreshold: 0.0,
       initialX: -1.35,
     },
   },
@@ -196,6 +278,38 @@ export const simulationPresets: SimulationPreset[] = [
       ballRestitution: 0.94,
       initialX1: -1.25,
       initialX2: 0.55,
+    },
+  },
+  {
+    id: 'colliding-blocks',
+    name: 'Colliding Blocks',
+    pluginId: 'colliding-blocks',
+    category: 'Mechanics',
+    summary: 'Multiple AABB blocks colliding in a bounded arena.',
+    help:
+      '여러 블록이 서로 충돌하고 벽에 반사되는 데모입니다.\nBlock/Wall restitution과 damping을 조절해 에너지 소산을 비교할 수 있습니다.\n블록을 드래그하거나 Shake 버튼으로 혼돈 상태를 만들 수 있습니다.',
+    params: {
+      gravity: 9.81,
+      damping: 0.02,
+      restitution: 0.6,
+      wallRestitution: 0.35,
+    },
+  },
+  {
+    id: 'polygon-shapes',
+    name: 'Polygon Shapes',
+    pluginId: 'polygon-shapes',
+    category: 'Mechanics',
+    summary: 'SAT polygon collision demo with rotating convex shapes.',
+    help:
+      '삼각형/사각형/오각형의 SAT 충돌 데모입니다.\n중력/감쇠/마찰/반발을 조절하며 다각형 접촉 안정성을 확인할 수 있습니다.\nReset Stack으로 초기 상태를 재구성합니다.',
+    params: {
+      gravity: 9.81,
+      damping: 0.02,
+      angularDamping: 0.06,
+      restitution: 0.58,
+      wallRestitution: 0.42,
+      friction: 0.32,
     },
   },
   {

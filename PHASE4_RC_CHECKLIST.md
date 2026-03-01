@@ -3,7 +3,7 @@
 ## 1) 필수 게이트
 
 - [ ] `npm run build` PASS
-- [ ] `npm test` PASS (현재 기준 101 tests)
+- [ ] `npm test` PASS (현재 기준 107 tests)
 - [ ] Scene Editor import/export round-trip 수동 확인
 - [ ] Joint 생성/편집(모터/리밋) 수동 확인
 - [ ] Drag-select / Shift multi-select / Esc clear 수동 확인
