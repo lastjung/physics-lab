@@ -1,6 +1,17 @@
 import { BodyState } from '../engine2d/collision/types';
 import { Joint } from '../engine2d/joints/types';
 
+export interface JointCreationPreview {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  mode: 'revolute' | 'prismatic' | 'weld';
+}
+
+export interface SelectionBoxPreview {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+}
+
 export class SceneEditorCanvasRenderer {
   private ctx: CanvasRenderingContext2D;
   private canvas: HTMLCanvasElement;
@@ -15,9 +26,16 @@ export class SceneEditorCanvasRenderer {
     this.zoom = z;
   }
 
-  render(bodies: BodyState[], joints: Joint[], selectedId?: string | null) {
+  render(
+    bodies: BodyState[],
+    joints: Joint[],
+    selectedIds: string[] = [],
+    preview: JointCreationPreview | null = null,
+    selectionBox: SelectionBoxPreview | null = null
+  ) {
     const { ctx, canvas, zoom: scale } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const selected = new Set(selectedIds);
 
     const worldToScreen = (x: number, y: number) => ({
       x: canvas.width / 2 + x * scale,
@@ -26,7 +44,7 @@ export class SceneEditorCanvasRenderer {
 
     // Draw Floor if exists
     for (const b of bodies) {
-        const isSelected = b.id === selectedId;
+        const isSelected = selected.has(b.id);
         if (b.id === 'floor') {
             const p = worldToScreen(b.x, b.y);
             ctx.fillStyle = '#cbd5e1';
@@ -78,7 +96,7 @@ export class SceneEditorCanvasRenderer {
 
     // Draw Joints
     for (const j of joints) {
-        const isSelected = j.id === selectedId;
+        const isSelected = selected.has(j.id);
         const bodyA = bodies.find(b => b.id === j.bodyIdA);
         const bodyB = bodies.find(b => b.id === j.bodyIdB);
         if (!bodyA || !bodyB) continue;
@@ -105,6 +123,73 @@ export class SceneEditorCanvasRenderer {
         ctx.beginPath();
         ctx.arc(sB.x, sB.y, 3, 0, Math.PI * 2);
         ctx.fill();
+    }
+
+    if (preview) {
+      const sA = worldToScreen(preview.from.x, preview.from.y);
+      const sB = worldToScreen(preview.to.x, preview.to.y);
+      const color =
+        preview.mode === 'weld' ? '#10b981' :
+        preview.mode === 'prismatic' ? '#0ea5e9' :
+        '#f97316';
+
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(sA.x, sA.y);
+      ctx.lineTo(sB.x, sB.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(sA.x, sA.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(sB.x, sB.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (preview.mode === 'prismatic') {
+        const dx = sB.x - sA.x;
+        const dy = sB.y - sA.y;
+        const len = Math.hypot(dx, dy);
+        if (len > 1e-6) {
+          const ux = dx / len;
+          const uy = dy / len;
+          const arrowLen = 14;
+          const px = -uy;
+          const py = ux;
+          const hx = sB.x - ux * arrowLen;
+          const hy = sB.y - uy * arrowLen;
+          ctx.beginPath();
+          ctx.moveTo(sB.x, sB.y);
+          ctx.lineTo(hx + px * 5, hy + py * 5);
+          ctx.lineTo(hx - px * 5, hy - py * 5);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    if (selectionBox) {
+      const a = worldToScreen(selectionBox.from.x, selectionBox.from.y);
+      const b = worldToScreen(selectionBox.to.x, selectionBox.to.y);
+      const left = Math.min(a.x, b.x);
+      const top = Math.min(a.y, b.y);
+      const width = Math.abs(a.x - b.x);
+      const height = Math.abs(a.y - b.y);
+      ctx.save();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.fillRect(left, top, width, height);
+      ctx.strokeRect(left, top, width, height);
+      ctx.restore();
     }
   }
 

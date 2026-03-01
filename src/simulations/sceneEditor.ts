@@ -8,6 +8,15 @@ export interface SceneEditorParams {
   gravity: number;
 }
 
+interface SerializedSceneEditorData {
+  version?: number;
+  bodies?: any[];
+  joints?: Joint[];
+  params?: Partial<SceneEditorParams>;
+}
+
+const SCENE_FORMAT_VERSION = 2;
+
 const defaultParams: SceneEditorParams = {
   gravity: 9.8,
 };
@@ -269,7 +278,8 @@ export class SceneEditorSimulation implements SimulationModel {
 
   serialize(): string {
       // Filter out floor as it's static/recreated on reset
-      const sceneData = {
+      const sceneData: SerializedSceneEditorData = {
+          version: SCENE_FORMAT_VERSION,
           bodies: this.bodies.filter(b => b.id !== 'floor').map(b => ({
               id: b.id,
               x: b.x,
@@ -296,7 +306,8 @@ export class SceneEditorSimulation implements SimulationModel {
 
   deserialize(dataStr: string): void {
       try {
-          const data = JSON.parse(dataStr);
+          const data = JSON.parse(dataStr) as SerializedSceneEditorData;
+          const version = Number(data.version ?? 1);
           this.reset();
           if (data.bodies) {
               data.bodies.forEach((b: any) => {
@@ -316,7 +327,13 @@ export class SceneEditorSimulation implements SimulationModel {
               this.joints = data.joints;
           }
           if (data.params) {
-              this.params = { ...this.params, ...data.params };
+              this.params = {
+                  ...this.params,
+                  gravity: Number(data.params.gravity ?? this.params.gravity)
+              };
+          } else if (version <= 1) {
+              // Legacy scenes had no params object; keep defaults for compatibility.
+              this.params = { ...defaultParams };
           }
       } catch (e) {
           console.error('Failed to deserialize scene:', e);

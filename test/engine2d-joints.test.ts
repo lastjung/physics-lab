@@ -371,4 +371,72 @@ describe('Engine2D Joints', () => {
     expect(b.x).toBeLessThan(12.0); // Clamped well despite huge velocity
     expect(b.vx).toBeLessThanOrEqual(0); // Should be stopped or reversed
   });
+
+  it('Revolute Joint: long-run motor/limit stress stays finite', () => {
+    const a = dummyStatic('static', 0, 0);
+    const b = dummyCircle('dynamic', 1, 0);
+    const joint: Joint = {
+      id: 'j14',
+      type: 'revolute',
+      bodyIdA: 'static',
+      bodyIdB: 'dynamic',
+      localAnchorA: { x: 0, y: 0 },
+      localAnchorB: { x: -1, y: 0 },
+      motorEnabled: true,
+      motorSpeed: 40,
+      maxMotorTorque: 200,
+      limitEnabled: true,
+      lowerAngle: -0.8,
+      upperAngle: 0.8
+    };
+
+    const dt = 1 / 120;
+    for (let i = 0; i < 600; i++) {
+      stepCollisionPipeline([a, b], { joints: [joint], dt, positionIterations: 20, velocityIterations: 12 });
+      b.vy += 9.8 * dt;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.angle += b.omega * dt;
+    }
+
+    expect(Number.isFinite(b.x)).toBe(true);
+    expect(Number.isFinite(b.y)).toBe(true);
+    expect(Number.isFinite(b.angle)).toBe(true);
+    expect(Math.abs(b.angle)).toBeLessThan(1.2);
+  });
+
+  it('Prismatic Joint: long-run high-speed stress stays finite and bounded', () => {
+    const a = dummyStatic('static', 0, 0);
+    const b = dummyCircle('dynamic', 0, 0);
+    const joint: Joint = {
+      id: 'j15',
+      type: 'prismatic',
+      bodyIdA: 'static',
+      bodyIdB: 'dynamic',
+      localAnchorA: { x: 0, y: 0 },
+      localAnchorB: { x: 0, y: 0 },
+      localAxisA: { x: 1, y: 0 },
+      motorEnabled: true,
+      motorSpeed: 120,
+      maxMotorForce: 5000,
+      limitEnabled: true,
+      lowerTranslation: -3,
+      upperTranslation: 3
+    };
+
+    const dt = 1 / 120;
+    for (let i = 0; i < 600; i++) {
+      stepCollisionPipeline([a, b], { joints: [joint], dt, positionIterations: 20, velocityIterations: 12 });
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.angle += b.omega * dt;
+    }
+
+    expect(Number.isFinite(b.x)).toBe(true);
+    expect(Number.isFinite(b.vx)).toBe(true);
+    expect(Number.isFinite(b.angle)).toBe(true);
+    expect(Math.abs(b.y)).toBeLessThan(0.5);
+    expect(b.x).toBeGreaterThan(-4);
+    expect(b.x).toBeLessThan(4);
+  });
 });
