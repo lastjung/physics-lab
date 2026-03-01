@@ -40,6 +40,7 @@ export const doublePendulumComparePlugin: SimulationPlugin = {
 
     // Interaction logic
     let isDragging = false;
+    let dragTarget: 0 | 1 = 0; // 0 for A, 1 for B
     
     const getCoords = (e: PointerEvent) => {
         const rect = context.canvas.getBoundingClientRect();
@@ -52,13 +53,17 @@ export const doublePendulumComparePlugin: SimulationPlugin = {
         const world = getCoords(e);
         const pos = model.getPositions();
         
-        // Check if clicking near mass 2 of Pendulum A (radius 0.3 window)
-        const d2 = Math.hypot(world.x - pos.a.x2, world.y - pos.a.y2);
-        if (d2 < 0.3) {
+        // Check both pendulums (Sky Blue: A, Red: B)
+        const dA = Math.hypot(world.x - pos.a.x2, world.y - pos.a.y2);
+        const dB = Math.hypot(world.x - pos.b.x2, world.y - pos.b.y2);
+
+        if (dA < 0.3 || dB < 0.3) {
             isDragging = true;
+            dragTarget = dA < dB ? 0 : 1;
             runner.stop();
             context.canvas.setPointerCapture(e.pointerId);
             e.preventDefault();
+            renderer.clearTrails();
         }
     });
 
@@ -81,7 +86,7 @@ export const doublePendulumComparePlugin: SimulationPlugin = {
         const y1 = l1 * Math.cos(t1);
         const t2 = Math.atan2(mouse.x - x1, mouse.y - y1);
         
-        model.setAngles(t1, t2);
+        model.setAngles(dragTarget, t1, t2);
         redraw();
     });
 
@@ -104,6 +109,16 @@ export const doublePendulumComparePlugin: SimulationPlugin = {
       destroy: () => {
         runner.stop();
         context.menuRoot.innerHTML = '';
+      },
+      onResize: (w, h) => {
+          console.log(`Chaos Compare Resize to ${w}x${h}`);
+          redraw();
+      },
+      onPause: () => {
+          console.log('Chaos Compare Sim Paused');
+      },
+      onResume: () => {
+          console.log('Chaos Compare Sim Resumed');
       }
     };
   }

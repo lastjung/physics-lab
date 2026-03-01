@@ -97,4 +97,10 @@ export const pluginMetadata: Record<string, Record<string, ParameterMetadata>> =
     l2: { label: 'Link 2 Length', min: 0.5, max: 2.0, step: 0.1 },
     damping: { label: 'Damping', min: 0.0, max: 0.2, step: 0.005 },
   },
+  'revolute-demo': {
+    motorSpeed: { label: 'Target Speed', min: -10, max: 10, step: 0.5 },
+    maxMotorTorque: { label: 'Max Torque', min: 0, max: 200, step: 5 },
+    lowerAngle: { label: 'Lower Limit', min: -180, max: 180, step: 1 },
+    upperAngle: { label: 'Upper Limit', min: -180, max: 180, step: 1 },
+  },
 };

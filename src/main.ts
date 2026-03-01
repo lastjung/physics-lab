@@ -18,6 +18,7 @@ import { pendulumPlugin } from './plugins/PendulumPlugin';
 import { rollerCoasterPlugin } from './plugins/RollerCoasterPlugin';
 import { rollerCoasterTwoBallsPlugin } from './plugins/RollerCoasterTwoBallsPlugin';
 import { springMassPlugin } from './plugins/SpringMassPlugin';
+import { revoluteDemoPlugin } from './plugins/RevoluteDemoPlugin';
 import type { ActivePlugin, SimulationPlugin } from './plugins/types';
 import { getPresetById, simulationPresets } from './simulations/registry';
 import { mountAudioControls } from './ui/audioControls';
@@ -83,6 +84,7 @@ const plugins: Record<string, SimulationPlugin> = {
   [hangingChainPlugin.id]: hangingChainPlugin,
   [pileAttractPlugin.id]: pileAttractPlugin,
   [doublePendulumComparePlugin.id]: doublePendulumComparePlugin,
+  [revoluteDemoPlugin.id]: revoluteDemoPlugin,
 };
 
 const urlState = readUrlState();
@@ -163,6 +165,11 @@ stagePanel.className = 'panel stage-panel';
 const menuPanel = document.createElement('aside');
 menuPanel.className = 'panel menu-panel';
 menuPanel.id = 'mobile-menu-sheet';
+
+const menuOverlay = document.createElement('div');
+menuOverlay.className = 'menu-overlay';
+const menuPanelContent = document.createElement('div');
+menuPanelContent.className = 'menu-panel-content';
 
 const librarySection = document.createElement('section');
 librarySection.className = 'library-section';
@@ -286,9 +293,10 @@ gameHelpMenu.body.append(gameHelpText);
 
 const gameMenu = createMenuSection('Game Controls', true);
 
-menuPanel.append(commonMenu.section, audioMenu.section, gameHelpMenu.section, gameMenu.section);
+menuPanelContent.append(commonMenu.section, audioMenu.section, gameHelpMenu.section, gameMenu.section);
+menuPanel.append(menuPanelContent);
 layout.append(stagePanel, menuPanel);
-shell.append(topbar, tabbar, layout);
+shell.append(topbar, tabbar, layout, menuOverlay);
 app.append(shell);
 
 const audio = new AudioEngine();
@@ -376,66 +384,84 @@ const refreshPlayLabel = () => {
   playPauseButton.textContent = active.isRunning() ? 'Pause' : 'Play';
 };
 
+const togglePlay = () => {
+    if (active.isRunning()) {
+        active.pause();
+        if (active.onPause) active.onPause();
+        soundEnabled = false;
+        audio.toggleMusic(false);
+        audio.setPendulumWhoosh(0, 0);
+        audio.setSpringMotion(0, 0);
+    } else {
+        active.play();
+        if (active.onResume) active.onResume();
+        soundEnabled = true;
+        audio.toggleMusic(true);
+    }
+    refreshPlayLabel();
+};
+
+const forcePause = () => {
+    if (active.isRunning()) {
+        active.pause();
+        if (active.onPause) active.onPause();
+        soundEnabled = false;
+        audio.toggleMusic(false);
+        audio.setPendulumWhoosh(0, 0);
+        audio.setSpringMotion(0, 0);
+        refreshPlayLabel();
+    }
+};
+
 playPauseButton.addEventListener('click', () => {
-  if (active.isRunning()) {
-    active.pause();
-    soundEnabled = false;
-    audio.toggleMusic(false);
-    audio.setPendulumWhoosh(0, 0);
-    audio.setSpringMotion(0, 0);
-  } else {
-    active.play();
-    soundEnabled = true;
-    audio.toggleMusic(true);
-  }
+  togglePlay();
   if (!playOnlySound || soundEnabled) audio.triggerSfx('click', 0.9);
-  refreshPlayLabel();
 });
 
 resetButton.addEventListener('click', () => {
-  active.pause();
-  soundEnabled = false;
-  audio.toggleMusic(false);
-  audio.setPendulumWhoosh(0, 0);
-  audio.setSpringMotion(0, 0);
+  forcePause();
   active.reset();
   if (!playOnlySound) audio.triggerSfx('reset', 1);
-  refreshPlayLabel();
 });
 
 stepButton.addEventListener('click', () => {
-  active.pause();
-  soundEnabled = false;
-  audio.toggleMusic(false);
-  audio.setPendulumWhoosh(0, 0);
-  audio.setSpringMotion(0, 0);
+  forcePause();
   active.step(1);
   if (!playOnlySound) audio.triggerSfx('step', 0.9);
-  refreshPlayLabel();
 });
 
 stepFastButton.addEventListener('click', () => {
-  active.pause();
-  soundEnabled = false;
-  audio.toggleMusic(false);
-  audio.setPendulumWhoosh(0, 0);
-  audio.setSpringMotion(0, 0);
+  forcePause();
   active.step(2);
   if (!playOnlySound) audio.triggerSfx('step', 1);
-  refreshPlayLabel();
 });
 
+const setMenuOpen = (open: boolean) => {
+  menuPanel.classList.toggle('open', open);
+  menuOverlay.classList.toggle('active', open);
+  mobileMenuButton.setAttribute('aria-expanded', String(open));
+  mobileMenuButton.textContent = open ? 'Close' : 'Menu';
+};
+
 mobileMenuButton.addEventListener('click', () => {
-  const isOpen = menuPanel.classList.toggle('open');
-  mobileMenuButton.setAttribute('aria-expanded', String(isOpen));
-  mobileMenuButton.textContent = isOpen ? 'Close' : 'Menu';
+  setMenuOpen(!menuPanel.classList.contains('open'));
 });
+
+menuOverlay.addEventListener('click', () => setMenuOpen(false));
+
+const handleResize = () => {
+    // Stage panel might have flex-grow, so canvas size might need tracking
+    // For now, track window size as a proxy or just call it
+    if (active.onResize) {
+        active.onResize(canvas.width, canvas.height);
+    }
+};
+window.addEventListener('resize', handleResize);
+handleResize(); // Initial call
 
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && menuPanel.classList.contains('open')) {
-    menuPanel.classList.remove('open');
-    mobileMenuButton.setAttribute('aria-expanded', 'false');
-    mobileMenuButton.textContent = 'Menu';
+    setMenuOpen(false);
     return;
   }
 
@@ -444,43 +470,22 @@ window.addEventListener('keydown', (event) => {
 
   if (event.code === 'Space') {
     event.preventDefault();
-    if (active.isRunning()) {
-      active.pause();
-      soundEnabled = false;
-      audio.toggleMusic(false);
-      audio.setPendulumWhoosh(0, 0);
-      audio.setSpringMotion(0, 0);
-    } else {
-      active.play();
-      soundEnabled = true;
-      audio.toggleMusic(true);
-    }
+    togglePlay();
     if (!playOnlySound || soundEnabled) audio.triggerSfx('click', 0.9);
-    refreshPlayLabel();
     return;
   }
 
   if (event.key === 'r' || event.key === 'R') {
-    active.pause();
-    soundEnabled = false;
-    audio.toggleMusic(false);
-    audio.setPendulumWhoosh(0, 0);
-    audio.setSpringMotion(0, 0);
+    forcePause();
     active.reset();
     if (!playOnlySound) audio.triggerSfx('reset', 1);
-    refreshPlayLabel();
     return;
   }
 
   if (event.code === 'Period') {
-    active.pause();
-    soundEnabled = false;
-    audio.toggleMusic(false);
-    audio.setPendulumWhoosh(0, 0);
-    audio.setSpringMotion(0, 0);
+    forcePause();
     active.step(event.shiftKey ? 2 : 1);
     if (!playOnlySound) audio.triggerSfx('step', event.shiftKey ? 1 : 0.9);
-    refreshPlayLabel();
   }
 });
 

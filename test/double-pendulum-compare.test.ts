@@ -51,4 +51,19 @@ describe('Double Pendulum Compare Simulation', () => {
     expect(Number.isFinite(stats.dt1)).toBe(true);
     expect(Number.isFinite(stats.dt2)).toBe(true);
   });
+
+  it('sync reset perfectly overlaps both pendulums at t=0', () => {
+    const model = new DoublePendulumCompare({ epsilon: 1e-3 });
+    model.setTime(2.5);
+    model.syncReset();
+
+    const state = model.getState();
+    expect(model.getTime()).toBe(0);
+    expect(state[0]).toBeCloseTo(state[4], 12);
+    expect(state[1]).toBeCloseTo(state[5], 12);
+    expect(state[2]).toBeCloseTo(0, 12);
+    expect(state[3]).toBeCloseTo(0, 12);
+    expect(state[6]).toBeCloseTo(0, 12);
+    expect(state[7]).toBeCloseTo(0, 12);
+  });
 });

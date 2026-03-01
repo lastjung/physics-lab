@@ -6,6 +6,7 @@ import { timeOfImpactCircleCircle, timeOfImpactCircleAABB, timeOfImpactAABBAABB 
 import { Joint } from '../joints/types';
 import { solveDistanceVelocity, solveDistancePosition } from '../joints/solveDistanceJoint';
 import { solveRevoluteVelocity, solveRevolutePosition } from '../joints/solveRevoluteJoint';
+import { solvePrismaticVelocity, solvePrismaticPosition } from '../joints/solvePrismaticJoint';
 
 // Frame-to-frame impulse cache for Warm Starting
 const impulseCache = new Map<string, { jn: number; jt: number }>();
@@ -415,7 +416,8 @@ export function stepCollisionPipeline(bodies: BodyState[], options: StepOptions 
       const b = bodyMap.get(joint.bodyIdB);
       if (!a || !b) continue;
       if (joint.type === 'distance') solveDistanceVelocity(joint, a, b);
-      else if (joint.type === 'revolute') solveRevoluteVelocity(joint, a, b);
+      else if (joint.type === 'revolute') solveRevoluteVelocity(joint, a, b, dt / vIter);
+      else if (joint.type === 'prismatic') solvePrismaticVelocity(joint, a, b, dt / vIter);
     }
   }
   for (let i = 0; i < pIter; i++) {
@@ -426,6 +428,7 @@ export function stepCollisionPipeline(bodies: BodyState[], options: StepOptions 
       if (!a || !b) continue;
       if (joint.type === 'distance') totalCorrection += solveDistancePosition(joint, a, b, beta);
       else if (joint.type === 'revolute') totalCorrection += solveRevolutePosition(joint, a, b, beta);
+      else if (joint.type === 'prismatic') totalCorrection += solvePrismaticPosition(joint, a, b, beta);
     }
   }
 

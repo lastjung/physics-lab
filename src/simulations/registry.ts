@@ -17,7 +17,8 @@ export interface SimulationPreset {
     | 'roller-coaster-two-balls'
     | 'pile-attract'
     | 'hanging-chain'
-    | 'double-pendulum-compare';
+    | 'double-pendulum-compare'
+    | 'revolute-demo';
   category: 'Oscillation' | 'Mechanics';
   summary: string;
   help: string;
@@ -273,6 +274,21 @@ export const simulationPresets: SimulationPreset[] = [
       epsilon: 1e-4,
       damping: 0.01,
       initialTheta1: 2.1,
+    },
+  },
+  {
+    id: 'revolute-demo',
+    name: 'Revolute Joint Demo',
+    pluginId: 'revolute-demo',
+    category: 'Mechanics',
+    summary: 'Demonstration of joint motors and angular limits on a rotating arm.',
+    help: 'Revolute Joint의 Motor와 Limit 기능을 테스트하는 데모입니다.\nMotor Speed와 Max Torque를 조절해 팔을 회전시키고,\nLimit을 활성화해 지정된 각도 범위 내에서만 움직이도록 제한할 수 있습니다.',
+    params: {
+      motorSpeed: 2.0,
+      maxMotorTorque: 50.0,
+      limitEnabled: 0,
+      lowerAngle: -0.7853981633974483,
+      upperAngle: 0.7853981633974483
     },
   },
 ];

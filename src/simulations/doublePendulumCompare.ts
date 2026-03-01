@@ -94,6 +94,15 @@ export class DoublePendulumCompare implements SimulationModel {
     this.time = 0;
   }
 
+  syncReset(): void {
+    const { initialTheta1, initialTheta2 } = this.params;
+    this.state = [
+      initialTheta1, initialTheta2, 0, 0,
+      initialTheta1, initialTheta2, 0, 0
+    ];
+    this.time = 0;
+  }
+
   getTime(): number { return this.time; }
   setTime(time: number): void { this.time = time; }
 
@@ -148,9 +157,17 @@ export class DoublePendulumCompare implements SimulationModel {
     };
   }
 
-  setAngles(t1: number, t2: number) {
-    this.params.initialTheta1 = t1;
-    this.params.initialTheta2 = t2;
-    this.reset();
+  setAngles(index: 0 | 1, t1: number, t2: number) {
+    const offset = index * 4;
+    this.state[offset] = t1;
+    this.state[offset + 1] = t2;
+    this.state[offset + 2] = 0; // Stop velocity while dragging
+    this.state[offset + 3] = 0;
+
+    // Optional: Synchronize initial state if dragging Pendulum A
+    if (index === 0) {
+      this.params.initialTheta1 = t1;
+      this.params.initialTheta2 = t2;
+    }
   }
 }

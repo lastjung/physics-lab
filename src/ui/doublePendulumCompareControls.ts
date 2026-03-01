@@ -65,7 +65,7 @@ export function mountDoublePendulumCompareControls(
   });
 
   root.querySelector('#btn-reset')?.addEventListener('click', () => {
-    model.reset();
+    model.syncReset();
     onUpdate();
   });
 }

@@ -17,6 +17,9 @@ export interface ActivePlugin {
   reset(): void;
   step(count?: number): void;
   destroy(): void;
+  onResize?(width: number, height: number): void;
+  onPause?(): void;
+  onResume?(): void;
 }
 
 export interface SimulationPlugin {
