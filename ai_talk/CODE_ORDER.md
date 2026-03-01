@@ -1,14 +1,23 @@
 # CODE_ORDER
 
-## 실행 전
-- 재민: 별도 터미널에서 `pnpm run ai:watch-jaemin` 실행
+## 원칙
+- 이 파일은 **AI -> 재민 오더(지시) 전용**
+- 리뷰 요청/결과는 여기 쓰지 않음
 
 ## 현재 오더
 
-- 작업: **Cycle-4 #6 Weld Joint 구현** (완료)
-- 결과: **94 PASS / Build SUCCESS**
-- 구현: Weld Joint 솔버(3축 구속), UI 버튼, 회귀 테스트 2개 추가
+- 작업명: **Cycle-4 #5 Wheel Joint 초안 구현**
+- DoD:
+  1. `solveWheelJoint`(또는 동등 구조) 추가
+  2. Prismatic + spring/damper 조합으로 2륜 데모 동작
+  3. 관련 테스트 추가 후 `pnpm test`, `pnpm build` 통과
+- 산출물:
+  - 구현 코드
+  - 테스트 코드
+  - 필요 시 데모 프리셋
 
-## 다음 오더 대기 중
+## 재민 실행 규칙
 
-- 보드 원본(`CODE_ALL_ORDER.md`)의 다음 항목 확인 필요
+1. 이 오더만 수행
+2. 완료 후 `ai_talk/CODE_TRIGGER.md` 작성
+3. `CODE_TRIGGER.md` 저장으로 리뷰 호출

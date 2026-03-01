@@ -25,6 +25,7 @@ export interface SimulationPreset {
     | 'hanging-chain'
     | 'double-pendulum-compare'
     | 'revolute-demo'
+    | 'wheel-joint-demo'
     | 'scene-editor';
   category: 'Oscillation' | 'Mechanics';
   summary: string;
@@ -184,27 +185,6 @@ export const simulationPresets: SimulationPreset[] = [
       cartSpring: 1.8,
       driveAmplitude: 0.8,
       driveFrequency: 1.1,
-      initialTheta: 0.45,
-    },
-  },
-  {
-    id: 'cart-pendulum-engine',
-    name: 'Cart + Pendulum (Engine)',
-    pluginId: 'cart-pendulum-engine',
-    category: 'Mechanics',
-    summary: 'Constraint-based cart-pole with rail joint and pendulum rod.',
-    help:
-      'Prismatic Joint(레일) + Distance Joint(막대)로 구성된 엔진 기반 카트-진자입니다.\nODE 버전과 달리 제약 오차(err)와 iteration 영향을 직접 볼 수 있습니다.\n카트/추를 드래그해 초기 상태를 바꾸며 안정성을 비교하세요.',
-    params: {
-      cartMass: 1.5,
-      bobMass: 0.35,
-      length: 0.9,
-      cartSpring: 1.9,
-      cartDamping: 0.23,
-      linearDamping: 0.03,
-      driveAmplitude: 0.8,
-      driveFrequency: 1.1,
-      iterations: 14,
       initialTheta: 0.45,
     },
   },
@@ -415,6 +395,22 @@ export const simulationPresets: SimulationPreset[] = [
     help: 'Drop objects and create joints in real-time. (Scaffold version)',
     params: {
       gravity: 9.8,
+    },
+  },
+  {
+    id: 'wheel-joint-demo',
+    name: 'Wheel Joint Demo (Car)',
+    pluginId: 'wheel-joint-demo',
+    category: 'Mechanics',
+    summary: 'Demonstration of wheel joints with suspension and motor.',
+    help: '두 개의 Wheel Joint가 적용된 간이 자동차 데모입니다.\nStiffness와 Damping으로 서스펜션 질감을 조절하고,\nMotor Speed로 속도를 제어할 수 있습니다.',
+    params: {
+      stiffness: 120,
+      damping: 12,
+      motorSpeed: 6.5,
+      maxMotorTorque: 60,
+      gravity: 12,
+      subSteps: 2
     },
   },
 ];

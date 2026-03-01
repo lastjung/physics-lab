@@ -17,6 +17,7 @@ else
 fi
 
 if [[ -f "$LOG_FILE" ]]; then
+  echo "log_mtime: $(stat -f '%Sm' "$LOG_FILE" 2>/dev/null || echo unknown)"
   echo "log: $LOG_FILE"
   echo "--- tail ---"
   tail -n 20 "$LOG_FILE"

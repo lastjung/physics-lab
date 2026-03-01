@@ -110,7 +110,7 @@
 - DoD: Revolute/Prismatic 생성 및 핵심 파라미터 편집 가능
 - 산출물: 조인트 생성/편집 패널 + 상태 반영 코드
 
-5. [OPEN] Wheel Joint 초안 구현
+5. [DOING] Wheel Joint 초안 구현
 
 - DoD: Prismatic + spring/damper 조합으로 2륜 데모 동작
 - 산출물: `solveWheelJoint`(또는 동등 구조) + 데모 프리셋
@@ -157,6 +157,6 @@
 
 ## AI 전용 섹션 (재민 수정 금지)
 
-- 마지막 검증 시각: 2026-03-01 12:08:24 (pnpm test 94 PASS / pnpm build SUCCESS)
-- 마지막 판정: 자동 검증 통과 (94 PASS / build SUCCESS)
-- 다음 오더 발행 시각: 2026-03-01 12:08:24 (자동 리뷰)
+- 마지막 검증 시각: 2026-03-01 15:33:55 (pnpm test 107 PASS / pnpm build SUCCESS)
+- 마지막 판정: 자동 검증 통과 (107 PASS / build SUCCESS)
+- 다음 오더 발행 시각: 2026-03-01 15:33:55 (자동 리뷰)

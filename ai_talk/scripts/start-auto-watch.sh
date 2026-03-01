@@ -14,7 +14,7 @@ if [[ -f "$PID_FILE" ]]; then
 fi
 
 cd "$ROOT_DIR"
-nohup node ai_talk/scripts/watch-jaemin.mjs >> "$LOG_FILE" 2>&1 &
+nohup node ai_talk/scripts/auto-orchestrator.mjs >> "$LOG_FILE" 2>&1 &
 NEW_PID=$!
 echo "$NEW_PID" > "$PID_FILE"
 echo "auto-watch started (pid=$NEW_PID)"

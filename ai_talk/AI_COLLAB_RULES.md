@@ -14,10 +14,25 @@ AI(Codex)와 재민이 같은 기준으로 빠르게 작업/검토/재지시를 
 ## 준자동 실행
 - 1회 자동 검토: `pnpm run ai:review-once`
 - 감시 모드(재민 문서 저장 감지): `pnpm run ai:watch-jaemin`
-- 감시 모드는 `ai_talk/CODE_TRIGGER.md` 변경 시 자동으로 test/build를 실행하고 `ai_talk/REVIEW_RESULT.md`와 `CODE_ALL_ORDER.md` AI 섹션을 갱신함
+- 오케스트레이터 직접 실행: `pnpm run ai:orchestrator`
+- 감시 모드는 `ai_talk/CODE_TRIGGER.md` 변경 시 자동으로 test/build를 실행하고 `ai_talk/REVIEW_RESULT.md`를 갱신함
 - 데몬 시작: `pnpm run ai:auto-start`
 - 데몬 상태: `pnpm run ai:auto-status`
 - 데몬 중지: `pnpm run ai:auto-stop`
+- macOS 상주 실행(권장): `pnpm run ai:launchd:install`
+- macOS 상주 상태: `pnpm run ai:launchd:status`
+- macOS 상주 제거: `pnpm run ai:launchd:uninstall`
+- 중요: `ai:auto-start`는 환경에 따라 상주가 죽을 수 있으므로 상태 확인 필수. `launchd` 설치 후에도 `ai:launchd:status`로 확인.
+
+## 완전자동 루프 (오케스트레이터)
+- 엔트리: `ai_talk/scripts/auto-orchestrator.mjs`
+- 트리거: `CODE_TRIGGER.md` 저장
+- 동작:
+  1. `review-once` 실행(`pnpm test`, `pnpm build`)
+     - 리뷰 결과는 `REVIEW_RESULT.md`에만 기록
+  2. `CODE_ALL_ORDER.md`의 `DOING` 항목을 결과에 따라 `DONE` 또는 `BLOCKED`로 전환
+  3. 다음 `OPEN` 항목을 `DOING`으로 승격
+  4. `CODE_ORDER.md` 현재 오더를 자동 재작성
 
 ## 재민 실행 규칙 (자동검토용)
 - 작업 시작 시 재민이 별도 터미널에서 `pnpm run ai:watch-jaemin` 실행

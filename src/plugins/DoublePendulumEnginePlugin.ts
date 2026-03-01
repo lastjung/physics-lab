@@ -108,7 +108,9 @@ export const doublePendulumEnginePlugin: SimulationPlugin = {
     const applyDrag = (event: PointerEvent) => {
       if (!dragTarget) return;
       const p = toCanvasPoint(event);
-      const world = renderer.screenToWorld(p.x, p.y);
+      const clampedX = Math.max(0, Math.min(context.canvas.width, p.x));
+      const clampedY = Math.max(0, Math.min(context.canvas.height, p.y));
+      const world = renderer.screenToWorld(clampedX, clampedY);
       model.setBobPosition(dragTarget, world.x, world.y);
       redraw();
     };

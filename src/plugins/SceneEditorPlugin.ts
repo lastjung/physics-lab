@@ -486,6 +486,27 @@ export const sceneEditorPlugin: SimulationPlugin = {
               <label style="display: flex; align-items: center; gap: 6px; color: #64748b;"><input type="checkbox" id="angle-snap-enabled" ${angleSnapEnabled ? 'checked' : ''}> Angle Snap</label>
               <input type="number" step="1" min="1" id="angle-snap-step" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;" value="${angleSnapStepDeg}">
             </div>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px;">
+               <span style="color: #64748b;">Sub-steps:</span>
+               <select id="sub-steps-select" style="padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1;">
+                  <option value="1" ${currentParams.subSteps === 1 ? 'selected' : ''}>1x</option>
+                  <option value="2" ${currentParams.subSteps === 2 ? 'selected' : ''}>2x</option>
+                  <option value="4" ${currentParams.subSteps === 4 ? 'selected' : ''}>4x</option>
+                  <option value="8" ${currentParams.subSteps === 8 ? 'selected' : ''}>8x</option>
+               </select>
+               <span style="color: #94a3b8; font-size: 0.75rem;">(Stability+)</span>
+            </div>
+          </div>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px;">
+               <span style="color: #64748b;">Sub-steps:</span>
+               <select id="sub-steps-select" style="padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1;">
+                  <option value="1" ${currentParams.subSteps === 1 ? 'selected' : ''}>1x</option>
+                  <option value="2" ${currentParams.subSteps === 2 ? 'selected' : ''}>2x</option>
+                  <option value="4" ${currentParams.subSteps === 4 ? 'selected' : ''}>4x</option>
+                  <option value="8" ${currentParams.subSteps === 8 ? 'selected' : ''}>8x</option>
+               </select>
+               <span style="color: #94a3b8; font-size: 0.75rem;">(Stability+)</span>
+            </div>
           </div>
 
           <div class="controls" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -511,6 +532,14 @@ export const sceneEditorPlugin: SimulationPlugin = {
             : 'Mode: Shift+Click multi-select, drag empty space for box-select, Esc clears selection.'}
         </div>
       `;
+
+      const subStepsSelect = menu.querySelector('#sub-steps-select') as HTMLSelectElement;
+      subStepsSelect?.addEventListener('change', (e: any) => {
+        model.setParam('subSteps', parseInt(e.target.value) || 1);
+        queueSaveScene();
+        uiNotice = `Sub-stepping: ${e.target.value}x`;
+        updateUI();
+      });
 
       const gravInput = menu.querySelector('#global-gravity') as HTMLInputElement;
       gravInput?.addEventListener('input', (e: any) => {

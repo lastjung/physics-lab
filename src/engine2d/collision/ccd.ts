@@ -129,3 +129,71 @@ export function timeOfImpactCircleAABB(c: BodyState, b: BodyState, dt: number): 
   // For basic CCD, the point-AABB approximation is often sufficient for preventing tunneling.
   return Math.max(0, tEntry) / dt;
 }
+/**
+ * Calculates TOI between two Polygons using Linear SAT Sweep.
+ * 
+ * LIMITATION: This scaffold assumes linear motion ONLY (no rotation during dt).
+ * TOI with rotation requires numerical root finding (conservative advancement).
+ * 
+ * Failure Cases (documented as per DoD):
+ * 1. Fast rotation tunneling: A polygon rotating very fast might still tunnel if its linear velocity is low.
+ * 2. Already overlapping: If polygons start overlapping, it returns 0 (standard behavior).
+ * 3. Grazing contacts: Numerical precision might cause missed impacts on perfectly aligned edges.
+ */
+export function timeOfImpactPolygonPolygon(a: BodyState, b: BodyState, dt: number): number | null {
+  if (!a.worldVertices || !b.worldVertices) return null;
+
+  const dvx = a.vx - b.vx;
+  const dvy = a.vy - b.vy;
+
+  if (Math.abs(dvx) < 1e-12 && Math.abs(dvy) < 1e-12) return null;
+
+  // Potential Axes: Normals of all edges
+  const getAxes = (poly: {x:number, y:number}[]) => {
+    const axes: {x:number, y:number}[] = [];
+    for (let i = 0; i < poly.length; i++) {
+        const v1 = poly[i];
+        const v2 = poly[(i + 1) % poly.length];
+        const edgeX = v2.x - v1.x;
+        const edgeY = v2.y - v1.y;
+        const len = Math.hypot(edgeX, edgeY);
+        if (len > 1e-9) axes.push({ x: -edgeY/len, y: edgeX/len });
+    }
+    return axes;
+  };
+
+  const project = (poly: {x:number, y:number}[], ax: number, ay: number) => {
+    let min = Infinity, max = -Infinity;
+    for (const v of poly) {
+        const dot = v.x * ax + v.y * ay;
+        if (dot < min) min = dot;
+        if (dot > max) max = dot;
+    }
+    return { min, max };
+  };
+
+  const axes = [...getAxes(a.worldVertices), ...getAxes(b.worldVertices)];
+  let tEntry = -Infinity;
+  let tExit = Infinity;
+
+  for (const axis of axes) {
+    const projA = project(a.worldVertices, axis.x, axis.y);
+    const projB = project(b.worldVertices, axis.x, axis.y);
+    const relativeSpeed = dvx * axis.x + dvy * axis.y;
+
+    if (Math.abs(relativeSpeed) < 1e-12) {
+        // Parallel motion on this axis: check if they are already separated
+        if (projA.min > projB.max || projB.min > projA.max) return null;
+    } else {
+        let t0 = (projB.min - projA.max) / relativeSpeed;
+        let t1 = (projB.max - projA.min) / relativeSpeed;
+        if (t0 > t1) [t0, t1] = [t1, t0];
+        
+        tEntry = Math.max(tEntry, t0);
+        tExit = Math.min(tExit, t1);
+    }
+  }
+
+  if (tEntry > tExit || tExit < 0 || tEntry > dt) return null;
+  return Math.max(0, tEntry) / dt;
+}

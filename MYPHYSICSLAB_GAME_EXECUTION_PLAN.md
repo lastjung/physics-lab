@@ -39,7 +39,7 @@
 - 수동 QA: 트랙 이탈/재접촉 안정성, 블록 스택 안정성
 - 자동 테스트: 고속 구간 터널링/침투량 회귀 테스트
 
-### Phase B: 형상/접촉 고도화 (2~3주)
+### Phase B: 형상/접촉 고도화 (2~3주, 부분 완료)
 
 대상:
 - Polygon Shapes
@@ -101,3 +101,15 @@
 2. Phase B(Polygon 우선) 완료
 3. Phase C 완료
 4. 후순위 백로그 순차 반영
+
+## 7. 마감 점검 기록 (2026-03-01)
+
+요약:
+- Top 6 구현 항목: 6/6 완료
+- 자동 테스트: `pnpm test` 기준 107/107 PASS
+- 빌드: `pnpm build` PASS
+
+남은 항목(본 계획서 기준):
+1. Phase B의 `Curved Objects` 구현 및 검증
+2. 게임별 기본 프리셋 2개 이상 정리(현재 일부 미충족)
+3. 백로그 항목 순차 반영(`String`, `Pendulum Clock`, `Dangling Stick`, `Rigid Double Pendulum`, `Rigid Body Roller Coaster`)

@@ -1,6 +1,6 @@
 import { BodyState } from '../collision/types';
 
-export type JointType = 'distance' | 'revolute' | 'prismatic' | 'weld';
+export type JointType = 'distance' | 'revolute' | 'prismatic' | 'weld' | 'wheel';
 
 export interface BaseJoint {
   id: string;
@@ -45,9 +45,21 @@ export interface PrismaticJoint extends BaseJoint {
   upperTranslation?: number;
 }
 
+export interface WheelJoint extends BaseJoint {
+  type: 'wheel';
+  localAxisA: { x: number; y: number };
+  // Motor
+  motorEnabled?: boolean;
+  motorSpeed?: number;
+  maxMotorTorque?: number;
+  // Suspension (Spring/Damper)
+  stiffness?: number;
+  damping?: number;
+}
+
 export interface WeldJoint extends BaseJoint {
   type: 'weld';
   referenceAngle: number;
 }
 
-export type Joint = DistanceJoint | RevoluteJoint | PrismaticJoint | WeldJoint;
+export type Joint = DistanceJoint | RevoluteJoint | PrismaticJoint | WeldJoint | WheelJoint;

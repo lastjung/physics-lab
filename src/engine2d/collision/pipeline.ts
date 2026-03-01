@@ -2,12 +2,13 @@ import { BodyState, Contact } from './types';
 import { resolveContacts } from './resolveImpulse';
 import { stabilizeContacts } from './stabilizeContact';
 import { computeCandidates, BroadPhaseOptions, BroadPhaseMode } from './broadPhase';
-import { timeOfImpactCircleCircle, timeOfImpactCircleAABB, timeOfImpactAABBAABB } from './ccd';
+import { timeOfImpactCircleCircle, timeOfImpactCircleAABB, timeOfImpactAABBAABB, timeOfImpactPolygonPolygon } from './ccd';
 import { Joint } from '../joints/types';
 import { solveDistanceVelocity, solveDistancePosition } from '../joints/solveDistanceJoint';
 import { solveRevoluteVelocity, solveRevolutePosition } from '../joints/solveRevoluteJoint';
 import { solvePrismaticVelocity, solvePrismaticPosition } from '../joints/solvePrismaticJoint';
 import { solveWeldVelocity, solveWeldPosition } from '../joints/solveWeldJoint';
+import { solveWheelVelocity, solveWheelPosition } from '../joints/solveWheelJoint';
 
 // Frame-to-frame impulse cache for Warm Starting
 const impulseCache = new Map<string, { jn: number; jt: number }>();
@@ -341,6 +342,8 @@ export function stepCollisionPipeline(bodies: BodyState[], options: StepOptions 
           toi = timeOfImpactCircleAABB(b, a, dt);
        } else if (a.shape === 'aabb' && b.shape === 'aabb') {
           toi = timeOfImpactAABBAABB(a, b, dt);
+       } else if (a.shape === 'polygon' && b.shape === 'polygon') {
+          toi = timeOfImpactPolygonPolygon(a, b, dt);
        }
 
        if (toi !== null && toi < 1) {
@@ -419,6 +422,7 @@ export function stepCollisionPipeline(bodies: BodyState[], options: StepOptions 
       if (joint.type === 'distance') solveDistanceVelocity(joint, a, b);
       else if (joint.type === 'revolute') solveRevoluteVelocity(joint, a, b, dt / vIter);
       else if (joint.type === 'prismatic') solvePrismaticVelocity(joint, a, b, dt / vIter);
+      else if (joint.type === 'wheel') solveWheelVelocity(joint, a, b, dt / vIter);
       else if (joint.type === 'weld') solveWeldVelocity(joint, a, b);
     }
   }
@@ -431,6 +435,7 @@ export function stepCollisionPipeline(bodies: BodyState[], options: StepOptions 
       if (joint.type === 'distance') totalCorrection += solveDistancePosition(joint, a, b, beta);
       else if (joint.type === 'revolute') totalCorrection += solveRevolutePosition(joint, a, b, beta);
       else if (joint.type === 'prismatic') totalCorrection += solvePrismaticPosition(joint, a, b, beta);
+      else if (joint.type === 'wheel') totalCorrection += solveWheelPosition(joint, a, b, beta);
       else if (joint.type === 'weld') totalCorrection += solveWeldPosition(joint, a, b, beta);
     }
   }

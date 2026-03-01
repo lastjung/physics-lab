@@ -18,26 +18,39 @@ export class DoublePendulumEngineCanvasRenderer {
   getSceneMetrics(): DoubleEngineSceneMetrics {
     const w = this.canvas.width;
     const h = this.canvas.height;
+    const p = this.model.getParams();
+    const reach = Math.max(0.4, p.length1 + p.length2);
+    const originY = h * 0.28;
+    const bottomMargin = h * 0.12;
+    const horizontalMargin = w * 0.12;
+    const maxScaleX = (w * 0.5 - horizontalMargin) / reach;
+    const maxScaleYDown = (h - originY - bottomMargin) / reach;
+    // Allow partial over-the-top rotation without shrinking the whole scene too much.
+    const maxScaleYUp = originY / (reach * 0.65);
+    const preferredScale = Math.min(w, h) * 0.24;
+    const pxPerMeter = Math.max(52, Math.min(preferredScale, maxScaleX, maxScaleYDown, maxScaleYUp));
     return {
       originX: w * 0.5,
-      originY: 88,
-      pxPerMeter: Math.min(w, h) * 0.2,
+      originY,
+      pxPerMeter,
     };
   }
 
   worldToScreen(x: number, y: number) {
     const m = this.getSceneMetrics();
+    const anchor = this.model.getAnchor();
     return {
-      x: m.originX + x * m.pxPerMeter,
-      y: m.originY + y * m.pxPerMeter,
+      x: m.originX + (x - anchor.x) * m.pxPerMeter,
+      y: m.originY + (y - anchor.y) * m.pxPerMeter,
     };
   }
 
   screenToWorld(px: number, py: number) {
     const m = this.getSceneMetrics();
+    const anchor = this.model.getAnchor();
     return {
-      x: (px - m.originX) / m.pxPerMeter,
-      y: (py - m.originY) / m.pxPerMeter,
+      x: anchor.x + (px - m.originX) / m.pxPerMeter,
+      y: anchor.y + (py - m.originY) / m.pxPerMeter,
     };
   }
 

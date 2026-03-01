@@ -25,6 +25,7 @@ import { collidingBlocksPlugin } from './plugins/CollidingBlocksPlugin';
 import { polygonShapesPlugin } from './plugins/PolygonShapesPlugin';
 import { springMassPlugin } from './plugins/SpringMassPlugin';
 import { revoluteDemoPlugin } from './plugins/RevoluteDemoPlugin';
+import { wheelJointDemoPlugin } from './plugins/WheelJointDemoPlugin';
 import { sceneEditorPlugin } from './plugins/SceneEditorPlugin';
 import type { ActivePlugin, SimulationPlugin } from './plugins/types';
 import { getPresetById, simulationPresets } from './simulations/registry';
@@ -98,6 +99,7 @@ const plugins: Record<string, SimulationPlugin> = {
   [pileAttractPlugin.id]: pileAttractPlugin,
   [doublePendulumComparePlugin.id]: doublePendulumComparePlugin,
   [revoluteDemoPlugin.id]: revoluteDemoPlugin,
+  [wheelJointDemoPlugin.id]: wheelJointDemoPlugin,
   [sceneEditorPlugin.id]: sceneEditorPlugin,
 };
 
@@ -163,7 +165,23 @@ const tabOrderedPresets = [...simulationPresets].sort((a, b) => {
   if (aNew === bNew) return 0;
   return aNew ? 1 : -1;
 });
+
+const isEnginePreset = (presetId: string, pluginId: string): boolean =>
+  presetId.endsWith('-engine') || pluginId.includes('engine');
+
+let engineDividerInserted = false;
 tabOrderedPresets.forEach((preset) => {
+  if (!engineDividerInserted && isEnginePreset(preset.id, preset.pluginId)) {
+    const divider = document.createElement('div');
+    divider.className = 'game-row-divider';
+    const label = document.createElement('span');
+    label.className = 'game-row-divider-label';
+    label.textContent = 'Engine';
+    divider.append(label);
+    quickLibraryRow.append(divider);
+    engineDividerInserted = true;
+  }
+
   const button = document.createElement('button');
   button.type = 'button';
   button.className = preset.id === activePreset.id ? 'game-btn active' : 'game-btn secondary';

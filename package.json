@@ -10,10 +10,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "ai:review-once": "node ai_talk/scripts/review-once.mjs",
+    "ai:orchestrator": "node ai_talk/scripts/auto-orchestrator.mjs",
     "ai:watch-jaemin": "node ai_talk/scripts/watch-jaemin.mjs",
     "ai:auto-start": "bash ai_talk/scripts/start-auto-watch.sh",
     "ai:auto-stop": "bash ai_talk/scripts/stop-auto-watch.sh",
-    "ai:auto-status": "bash ai_talk/scripts/status-auto-watch.sh"
+    "ai:auto-status": "bash ai_talk/scripts/status-auto-watch.sh",
+    "ai:launchd:install": "bash ai_talk/scripts/install-launchd.sh",
+    "ai:launchd:uninstall": "bash ai_talk/scripts/uninstall-launchd.sh",
+    "ai:launchd:status": "bash ai_talk/scripts/status-launchd.sh"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

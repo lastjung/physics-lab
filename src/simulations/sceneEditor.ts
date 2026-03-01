@@ -6,6 +6,7 @@ import { Joint, PrismaticJoint } from '../engine2d/joints/types';
 
 export interface SceneEditorParams {
   gravity: number;
+  subSteps: number;
 }
 
 interface SerializedSceneEditorData {
@@ -22,6 +23,7 @@ const SCENE_FORMAT_VERSION = 3;
 
 const defaultParams: SceneEditorParams = {
   gravity: 9.8,
+  subSteps: 1,
 };
 
 const migrationSteps: Record<number, (data: SerializedSceneEditorData) => SerializedSceneEditorData> = {
@@ -111,20 +113,23 @@ export class SceneEditorSimulation implements SimulationModel {
   }
 
   step(dt: number): void {
-      // 1. Semi-implicit Euler
-      for (const b of this.bodies) {
-          if (b.invMass === 0) continue;
-          // Gravity
-          b.vy += this.params.gravity * dt;
+      const subDt = dt / this.params.subSteps;
+      for (let s = 0; s < this.params.subSteps; s++) {
+          // 1. Semi-implicit Euler
+          for (const b of this.bodies) {
+              if (b.invMass === 0) continue;
+              // Gravity
+              b.vy += this.params.gravity * subDt;
+              
+              b.vx += 0; 
+              b.x += b.vx * subDt;
+              b.y += b.vy * subDt;
+              b.angle += b.omega * subDt;
+          }
           
-          b.vx += 0; // No other forces for now
-          b.x += b.vx * dt;
-          b.y += b.vy * dt;
-          b.angle += b.omega * dt;
+          // 2. Resolve
+          this.resolveCollisions(subDt);
       }
-      
-      // 2. Resolve
-      this.resolveCollisions(dt);
       this.time += dt;
   }
 
