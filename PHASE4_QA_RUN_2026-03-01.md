@@ -11,7 +11,7 @@
 ## 자동 검증 결과
 
 - `npm run build`: PASS
-- `npm test`: PASS (100 tests)
+- `npm test`: PASS (101 tests)
 - 핵심 확장 테스트:
   - `test/engine2d-joints.test.ts` long-run stress 2건 PASS
   - `test/scene-editor.test.ts` serialize version/legacy 2건 PASS

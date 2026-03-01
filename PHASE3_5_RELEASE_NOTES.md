@@ -23,7 +23,7 @@ Phase 3.5 introduces significant enhancements to the physics engine core and add
 
 ## 3. Stability Indicators
 
-- **Regression Tests**: Total **100** tests.
+- **Regression Tests**: Total **101** tests.
 - **Status**: **PASSING** (including Joint Motor/Limit and Prismatic Joint stability cases).
 
 ## 남은 리스크 (Remaining Risks)
@@ -33,6 +33,6 @@ Phase 3.5 introduces significant enhancements to the physics engine core and add
 
 ## 마무리 보고
 
-- **테스트**: 100개 PASS
+- **테스트**: 101개 PASS
 - **빌드**: Vite Build SUCCESS
 - **버전**: Phase 3.5 Stable

@@ -19,7 +19,7 @@ Phase 4(Advanced Mechanisms) 진행 중 완료 기준을 고정하고, 릴리스
 
 ## 3) 자동 검증 기준 (Test Gate)
 
-- `npm test` 전체 통과: 100 PASS (2026-03-01 기준).
+- `npm test` 전체 통과: 101 PASS (2026-03-01 기준).
 - 신규 스트레스 테스트 통과:
   - `test/engine2d-joints.test.ts`의 long-run revolute/prismatic stress
   - `test/scene-editor.test.ts`의 scene format version / legacy deserialize

@@ -9,7 +9,7 @@
 - [x] **Broad-phase frame-stutter**: 확인 완료 (Spatial Hashing 효율성 검증)
 - [x] **HUD finite numbers**: 관련 회귀 테스트 통과
 - [x] **Chaos Compare Sync Reset**: 동작 수정 + 자동 테스트 통과
-- [x] **Unit Tests**: `pnpm test` 통과 (100 PASS)
+- [x] **Unit Tests**: `pnpm test` 통과 (101 PASS)
 - [x] **Production Build**: `pnpm build` 성공
 
 ## 1. Interaction & UI
@@ -33,5 +33,5 @@
 
 ## 4. Verification Commands
 
-- **Unit Tests**: `pnpm test` (100 PASS)
+- **Unit Tests**: `pnpm test` (101 PASS)
 - **Production Build**: `pnpm build` (SUCCESS)

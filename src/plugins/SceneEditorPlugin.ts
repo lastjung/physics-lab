@@ -36,8 +36,12 @@ export const sceneEditorPlugin: SimulationPlugin = {
     let primarySelectedId: string | null = null;
 
     let isDragging = false;
+    let draggingPointerId: number | null = null;
     let dragOriginWorld: { x: number; y: number } | null = null;
     const dragStartPositions = new Map<string, { x: number; y: number }>();
+    let pendingTouchDragBodyId: string | null = null;
+    let pendingTouchDragPointerId: number | null = null;
+    let pendingTouchDragStartWorld: { x: number; y: number } | null = null;
 
     let isBoxSelecting = false;
     let selectionBoxStart: { x: number; y: number } | null = null;
@@ -58,6 +62,7 @@ export const sceneEditorPlugin: SimulationPlugin = {
     let uiNotice: string | null = null;
     let saveTimer: number | null = null;
     let redrawQueued = false;
+    const TOUCH_DRAG_THRESHOLD = 0.06;
 
     const refreshCaches = () => {
       cachedBodies = model.getBodies();
@@ -144,6 +149,33 @@ export const sceneEditorPlugin: SimulationPlugin = {
 
     const selectedBodyIds = () => {
       return cachedBodies.filter(b => selectedIds.has(b.id) && b.id !== 'floor').map(b => b.id);
+    };
+
+    const startGroupDrag = (originWorld: { x: number; y: number }, pointerId: number) => {
+      dragStartPositions.clear();
+      selectedBodyIds().forEach(id => {
+        const body = cachedBodies.find(b => b.id === id);
+        if (body) dragStartPositions.set(id, { x: body.x, y: body.y });
+      });
+      isDragging = dragStartPositions.size > 0;
+      draggingPointerId = isDragging ? pointerId : null;
+      dragOriginWorld = isDragging ? originWorld : null;
+    };
+
+    const intersectsSelectionRect = (
+      body: any,
+      minX: number,
+      maxX: number,
+      minY: number,
+      maxY: number
+    ) => {
+      const hx = body.shape === 'circle' ? body.radius : body.halfW;
+      const hy = body.shape === 'circle' ? body.radius : body.halfH;
+      const bMinX = body.x - hx;
+      const bMaxX = body.x + hx;
+      const bMinY = body.y - hy;
+      const bMaxY = body.y + hy;
+      return !(bMaxX < minX || bMinX > maxX || bMaxY < minY || bMinY > maxY);
     };
 
     const getJointPreview = (): JointCreationPreview | null => {
@@ -317,7 +349,7 @@ export const sceneEditorPlugin: SimulationPlugin = {
 
       for (const b of cachedBodies) {
         if (b.id === 'floor') continue;
-        if (b.x >= minX && b.x <= maxX && b.y >= minY && b.y <= maxY) next.add(b.id);
+        if (intersectsSelectionRect(b, minX, maxX, minY, maxY)) next.add(b.id);
       }
 
       selectedIds = next;
@@ -691,14 +723,21 @@ export const sceneEditorPlugin: SimulationPlugin = {
           selectedIds = new Set(selectedBodyIds());
         }
 
-        dragStartPositions.clear();
-        selectedBodyIds().forEach(id => {
-          const body = cachedBodies.find(b => b.id === id);
-          if (body) dragStartPositions.set(id, { x: body.x, y: body.y });
-        });
+        if (e.pointerType === 'touch') {
+          // For touch input, defer drag until movement passes threshold.
+          pendingTouchDragBodyId = hitBody.id;
+          pendingTouchDragPointerId = e.pointerId;
+          pendingTouchDragStartWorld = worldRaw;
+          isDragging = false;
+          draggingPointerId = null;
+          dragOriginWorld = null;
+        } else {
+          pendingTouchDragBodyId = null;
+          pendingTouchDragPointerId = null;
+          pendingTouchDragStartWorld = null;
+          startGroupDrag(worldRaw, e.pointerId);
+        }
 
-        isDragging = dragStartPositions.size > 0;
-        dragOriginWorld = worldRaw;
         isBoxSelecting = false;
         context.onSfx('click', 0.5);
       } else if (hitJoint) {
@@ -722,7 +761,25 @@ export const sceneEditorPlugin: SimulationPlugin = {
       const worldRaw = toWorldFromEvent(e);
       pointerWorld = worldRaw;
 
-      if (isDragging && dragOriginWorld) {
+      if (
+        pendingTouchDragBodyId &&
+        pendingTouchDragPointerId === e.pointerId &&
+        pendingTouchDragStartWorld &&
+        !isDragging
+      ) {
+        const d = Math.hypot(
+          worldRaw.x - pendingTouchDragStartWorld.x,
+          worldRaw.y - pendingTouchDragStartWorld.y
+        );
+        if (d >= TOUCH_DRAG_THRESHOLD) {
+          startGroupDrag(pendingTouchDragStartWorld, e.pointerId);
+          pendingTouchDragBodyId = null;
+          pendingTouchDragPointerId = null;
+          pendingTouchDragStartWorld = null;
+        }
+      }
+
+      if (isDragging && dragOriginWorld && (draggingPointerId === null || draggingPointerId === e.pointerId)) {
         const dx = worldRaw.x - dragOriginWorld.x;
         const dy = worldRaw.y - dragOriginWorld.y;
         for (const [id, start] of dragStartPositions.entries()) {
@@ -743,13 +800,17 @@ export const sceneEditorPlugin: SimulationPlugin = {
       if (jointMode || isDragging || isBoxSelecting) requestRedraw();
     };
 
-    const onPointerUp = () => {
-      if (isDragging) queueSaveScene();
+    const onPointerUp = (e: PointerEvent) => {
+      if (isDragging && (draggingPointerId === null || draggingPointerId === e.pointerId)) queueSaveScene();
       if (isBoxSelecting) applySelectionBox();
 
       isDragging = false;
+      draggingPointerId = null;
       dragOriginWorld = null;
       dragStartPositions.clear();
+      pendingTouchDragBodyId = null;
+      pendingTouchDragPointerId = null;
+      pendingTouchDragStartWorld = null;
 
       isBoxSelecting = false;
       selectionBoxStart = null;
@@ -766,9 +827,13 @@ export const sceneEditorPlugin: SimulationPlugin = {
       pendingAnchorWorld = null;
       pointerWorld = null;
       isDragging = false;
+      draggingPointerId = null;
       isBoxSelecting = false;
       selectionBoxStart = null;
       selectionBoxCurrent = null;
+      pendingTouchDragBodyId = null;
+      pendingTouchDragPointerId = null;
+      pendingTouchDragStartWorld = null;
       clearSelection();
       uiNotice = 'Selection cleared.';
       requestRedraw();
@@ -796,6 +861,14 @@ export const sceneEditorPlugin: SimulationPlugin = {
         pendingBodyA = null;
         pendingAnchorWorld = null;
         pointerWorld = null;
+        isDragging = false;
+        draggingPointerId = null;
+        pendingTouchDragBodyId = null;
+        pendingTouchDragPointerId = null;
+        pendingTouchDragStartWorld = null;
+        isBoxSelecting = false;
+        selectionBoxStart = null;
+        selectionBoxCurrent = null;
         uiNotice = 'Scene reset.';
         flushSaveScene();
         requestRedraw();

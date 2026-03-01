@@ -13,12 +13,39 @@ interface SerializedSceneEditorData {
   bodies?: any[];
   joints?: Joint[];
   params?: Partial<SceneEditorParams>;
+  meta?: {
+    savedAt?: string;
+  };
 }
 
-const SCENE_FORMAT_VERSION = 2;
+const SCENE_FORMAT_VERSION = 3;
 
 const defaultParams: SceneEditorParams = {
   gravity: 9.8,
+};
+
+const migrationSteps: Record<number, (data: SerializedSceneEditorData) => SerializedSceneEditorData> = {
+  1: (data) => ({
+    ...data,
+    version: 2,
+    bodies: (data.bodies ?? []).map((b: any) => ({
+      ...b,
+      friction: Number.isFinite(Number(b?.friction)) ? Number(b.friction) : 0.3
+    })),
+    joints: Array.isArray(data.joints) ? data.joints : [],
+    params: {
+      gravity: Number.isFinite(Number(data.params?.gravity))
+        ? Number(data.params?.gravity)
+        : defaultParams.gravity
+    }
+  }),
+  2: (data) => ({
+    ...data,
+    version: 3,
+    meta: {
+      savedAt: new Date().toISOString()
+    }
+  })
 };
 
 export class SceneEditorSimulation implements SimulationModel {
@@ -299,15 +326,27 @@ export class SceneEditorSimulation implements SimulationModel {
               friction: b.friction
           })),
           joints: this.joints.map(j => ({ ...j })),
-          params: { ...this.params }
+          params: { ...this.params },
+          meta: {
+              savedAt: new Date().toISOString()
+          }
       };
       return JSON.stringify(sceneData);
   }
 
   deserialize(dataStr: string): void {
       try {
-          const data = JSON.parse(dataStr) as SerializedSceneEditorData;
-          const version = Number(data.version ?? 1);
+          let data = JSON.parse(dataStr) as SerializedSceneEditorData;
+          let version = Number(data.version ?? 1);
+          if (!Number.isFinite(version) || version < 1) version = 1;
+
+          while (version < SCENE_FORMAT_VERSION) {
+              const migrate = migrationSteps[version];
+              if (!migrate) break;
+              data = migrate(data);
+              version += 1;
+          }
+
           this.reset();
           if (data.bodies) {
               data.bodies.forEach((b: any) => {
@@ -319,7 +358,8 @@ export class SceneEditorSimulation implements SimulationModel {
                       vx: Number(b.vx),
                       vy: Number(b.vy),
                       angle: Number(b.angle),
-                      omega: Number(b.omega)
+                      omega: Number(b.omega),
+                      friction: Number.isFinite(Number(b.friction)) ? Number(b.friction) : 0.3
                   });
               });
           }

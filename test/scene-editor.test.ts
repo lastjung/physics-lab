@@ -101,7 +101,8 @@ describe('SceneEditorSimulation Scaffold', () => {
     sim.addCircle(0, 0, 0.2);
     const data = JSON.parse(sim.serialize());
 
-    expect(data.version).toBe(2);
+    expect(data.version).toBe(3);
+    expect(typeof data.meta?.savedAt).toBe('string');
     expect(Array.isArray(data.bodies)).toBe(true);
     expect(Array.isArray(data.joints)).toBe(true);
   });
@@ -136,5 +137,36 @@ describe('SceneEditorSimulation Scaffold', () => {
     expect(bodies.length).toBe(2); // floor + legacy body
     expect(bodies.some(b => b.id === 'legacy_circle')).toBe(true);
     expect(sim.getParams().gravity).toBeCloseTo(9.8, 5);
+  });
+
+  it('should migrate v2 payload to latest format on load', () => {
+    const v2Payload = JSON.stringify({
+      version: 2,
+      bodies: [{
+        id: 'v2_circle',
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        angle: 0,
+        omega: 0,
+        shape: 'circle',
+        radius: 0.2,
+        halfW: 0.2,
+        halfH: 0.2,
+        mass: 1,
+        invMass: 1,
+        inertia: 1,
+        invInertia: 1,
+        friction: 0.25
+      }],
+      joints: [],
+      params: { gravity: 7.5 }
+    });
+
+    const sim = new SceneEditorSimulation();
+    sim.deserialize(v2Payload);
+    expect(sim.getBodies().some(b => b.id === 'v2_circle')).toBe(true);
+    expect(sim.getParams().gravity).toBe(7.5);
   });
 });
